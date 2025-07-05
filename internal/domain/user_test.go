@@ -17,7 +17,7 @@ func TestRole_Constants(t *testing.T) {
 func TestUser_Struct(t *testing.T) {
 	now := time.Now()
 	lastLogin := now.Add(-24 * time.Hour)
-	
+
 	user := &User{
 		ID:             1,
 		OrganizationID: 100,
@@ -30,7 +30,7 @@ func TestUser_Struct(t *testing.T) {
 		UpdatedAt:      now,
 		LastLoginAt:    &lastLogin,
 	}
-	
+
 	assert.Equal(t, uint64(1), user.ID)
 	assert.Equal(t, uint64(100), user.OrganizationID)
 	assert.Equal(t, "test@example.com", user.Email)
@@ -57,13 +57,13 @@ func TestUser_NilLastLoginAt(t *testing.T) {
 		UpdatedAt:      time.Now(),
 		LastLoginAt:    nil,
 	}
-	
+
 	assert.Nil(t, user.LastLoginAt)
 }
 
 func TestUser_AllRoles(t *testing.T) {
 	roles := []Role{RoleSuperAdmin, RoleAdmin, RoleUser, RoleViewer}
-	
+
 	for _, role := range roles {
 		user := &User{
 			ID:             1,
@@ -76,7 +76,7 @@ func TestUser_AllRoles(t *testing.T) {
 			CreatedAt:      time.Now(),
 			UpdatedAt:      time.Now(),
 		}
-		
+
 		assert.Equal(t, role, user.Role)
 	}
 }
@@ -91,7 +91,7 @@ func TestUser_EmptyFields(t *testing.T) {
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}
-	
+
 	assert.Empty(t, user.FirstName)
 	assert.Empty(t, user.LastName)
 	assert.Nil(t, user.LastLoginAt)

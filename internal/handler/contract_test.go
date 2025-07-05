@@ -17,14 +17,14 @@ import (
 )
 
 // TestAPIContractValidation tests that API endpoints maintain their expected contracts
-func SkipTestAPIContractValidation(t *testing.T) {
+func TestAPIContractValidation(t *testing.T) {
 	t.Skip("Skipping contract tests - need to fix mock expectations vs actual handler behavior")
 	gin.SetMode(gin.TestMode)
 
 	t.Run("Chat API Contracts", func(t *testing.T) {
 		mockChatService := &mocks.MockChatService{}
 		mockMessageService := &mocks.MockMessageService{}
-		
+
 		handler := NewChatHandler(mockChatService, mockMessageService)
 		router := gin.New()
 		router.Use(func(c *gin.Context) {
@@ -54,7 +54,7 @@ func SkipTestAPIContractValidation(t *testing.T) {
 			jsonBody, _ := json.Marshal(requestBody)
 			req, _ := http.NewRequest("POST", "/chats", bytes.NewBuffer(jsonBody))
 			req.Header.Set("Content-Type", "application/json")
-			
+
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
@@ -86,7 +86,7 @@ func SkipTestAPIContractValidation(t *testing.T) {
 			testChat := fixtures.CreateTestChat(1)
 			testChat.ID = 1
 			testChat.OrganizationID = 1
-			
+
 			mockChatService.On("GetByID", uint64(1)).Return(testChat, nil)
 
 			req, _ := http.NewRequest("GET", "/chats/1", nil)
@@ -120,7 +120,7 @@ func SkipTestAPIContractValidation(t *testing.T) {
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, http.StatusNotFound, w.Code, "Should return 404 Not Found")
-			
+
 			var errorResponse map[string]interface{}
 			err := json.Unmarshal(w.Body.Bytes(), &errorResponse)
 			require.NoError(t, err, "Error response should be valid JSON")
@@ -149,13 +149,13 @@ func SkipTestAPIContractValidation(t *testing.T) {
 			jsonBody, _ := json.Marshal(updateBody)
 			req, _ := http.NewRequest("PUT", "/chats/1", bytes.NewBuffer(jsonBody))
 			req.Header.Set("Content-Type", "application/json")
-			
+
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
 			// Contract validation
 			assert.Equal(t, http.StatusOK, w.Code, "Should return 200 OK")
-			
+
 			var response map[string]interface{}
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			require.NoError(t, err, "Response should be valid JSON")
@@ -176,7 +176,7 @@ func SkipTestAPIContractValidation(t *testing.T) {
 
 			// Contract validation
 			assert.Equal(t, http.StatusOK, w.Code, "Should return 200 OK")
-			
+
 			var response map[string]interface{}
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			require.NoError(t, err, "Response should be valid JSON")
@@ -193,7 +193,7 @@ func SkipTestAPIContractValidation(t *testing.T) {
 				*fixtures.CreateTestChat(1),
 				*fixtures.CreateTestChat(1),
 			}
-			
+
 			mockChatService.On("GetByOrganizationID", uint64(1), 10, 0).Return(chats, nil)
 
 			req, _ := http.NewRequest("GET", "/chats", nil)
@@ -202,14 +202,14 @@ func SkipTestAPIContractValidation(t *testing.T) {
 
 			// Contract validation
 			assert.Equal(t, http.StatusOK, w.Code, "Should return 200 OK")
-			
+
 			var response []domain.Chat
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			require.NoError(t, err, "Response should be valid JSON array")
 
 			// Validate array structure
 			assert.Len(t, response, 2, "Should return expected number of chats")
-			
+
 			if len(response) > 0 {
 				chat := response[0]
 				assert.NotZero(t, chat.ID, "Chat should have ID")
@@ -223,13 +223,13 @@ func SkipTestAPIContractValidation(t *testing.T) {
 }
 
 // TestAPIVersionCompatibility tests that API maintains backward compatibility
-func SkipTestAPIVersionCompatibility(t *testing.T) {
+func TestAPIVersionCompatibility(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	t.Run("Request Format Compatibility", func(t *testing.T) {
 		mockChatService := &mocks.MockChatService{}
 		mockMessageService := &mocks.MockMessageService{}
-		
+
 		handler := NewChatHandler(mockChatService, mockMessageService)
 		router := gin.New()
 		router.Use(func(c *gin.Context) {
@@ -278,7 +278,7 @@ func SkipTestAPIVersionCompatibility(t *testing.T) {
 				jsonBody, _ := json.Marshal(tc.requestBody)
 				req, _ := http.NewRequest("POST", "/chats", bytes.NewBuffer(jsonBody))
 				req.Header.Set("Content-Type", "application/json")
-				
+
 				w := httptest.NewRecorder()
 				router.ServeHTTP(w, req)
 
@@ -295,7 +295,7 @@ func SkipTestAPIVersionCompatibility(t *testing.T) {
 }
 
 // TestErrorResponseContracts tests that error responses follow consistent format
-func SkipTestErrorResponseContracts(t *testing.T) {
+func TestErrorResponseContracts(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	errorScenarios := []struct {
@@ -344,16 +344,16 @@ func SkipTestErrorResponseContracts(t *testing.T) {
 		t.Run(scenario.name, func(t *testing.T) {
 			mockChatService := &mocks.MockChatService{}
 			mockMessageService := &mocks.MockMessageService{}
-			
+
 			scenario.setupMock(mockChatService)
-			
+
 			handler := NewChatHandler(mockChatService, mockMessageService)
 			router := gin.New()
 			router.Use(func(c *gin.Context) {
 				c.Set("organization_id", uint64(1))
 				c.Next()
 			})
-			
+
 			router.POST("/chats", handler.CreateChat)
 			router.GET("/chats/:id", handler.GetChat)
 
@@ -369,7 +369,7 @@ func SkipTestErrorResponseContracts(t *testing.T) {
 			} else {
 				req, _ = http.NewRequest(scenario.method, scenario.path, nil)
 			}
-			
+
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
@@ -384,7 +384,7 @@ func SkipTestErrorResponseContracts(t *testing.T) {
 			// Validate error response structure
 			assert.Contains(t, errorResponse, "error", "Error response should contain error field")
 			assert.IsType(t, "", errorResponse["error"], "Error should be string")
-			
+
 			if scenario.expectedError != "" {
 				errorMessage, ok := errorResponse["error"].(string)
 				require.True(t, ok, "Error should be string")
@@ -397,19 +397,19 @@ func SkipTestErrorResponseContracts(t *testing.T) {
 }
 
 // TestResponseHeaderContracts tests that response headers are consistent
-func SkipTestResponseHeaderContracts(t *testing.T) {
+func TestResponseHeaderContracts(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	mockChatService := &mocks.MockChatService{}
 	mockMessageService := &mocks.MockMessageService{}
-	
+
 	handler := NewChatHandler(mockChatService, mockMessageService)
 	router := gin.New()
 	router.Use(func(c *gin.Context) {
 		c.Set("organization_id", uint64(1))
 		c.Next()
 	})
-	
+
 	router.GET("/chats/:id", handler.GetChat)
 
 	// Setup mock
@@ -425,7 +425,7 @@ func SkipTestResponseHeaderContracts(t *testing.T) {
 	// Validate standard headers
 	assert.Equal(t, "application/json; charset=utf-8", w.Header().Get("Content-Type"), "Should set correct Content-Type")
 	assert.NotEmpty(t, w.Header().Get("Content-Length"), "Should set Content-Length")
-	
+
 	// Validate no sensitive headers are exposed
 	assert.Empty(t, w.Header().Get("X-Database-Query"), "Should not expose internal details")
 	assert.Empty(t, w.Header().Get("X-Debug-Info"), "Should not expose debug information")
@@ -434,26 +434,26 @@ func SkipTestResponseHeaderContracts(t *testing.T) {
 }
 
 // TestPaginationContract tests that pagination follows consistent format
-func SkipTestPaginationContract(t *testing.T) {
+func TestPaginationContract(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	mockChatService := &mocks.MockChatService{}
 	mockMessageService := &mocks.MockMessageService{}
-	
+
 	handler := NewChatHandler(mockChatService, mockMessageService)
 	router := gin.New()
 	router.Use(func(c *gin.Context) {
 		c.Set("organization_id", uint64(1))
 		c.Next()
 	})
-	
+
 	router.GET("/chats", handler.ListChats)
 
 	testCases := []struct {
-		name     string
-		query    string
-		limit    int
-		offset   int
+		name   string
+		query  string
+		limit  int
+		offset int
 	}{
 		{
 			name:   "Default pagination",
@@ -492,7 +492,7 @@ func SkipTestPaginationContract(t *testing.T) {
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, http.StatusOK, w.Code, "Should return 200 OK")
-			
+
 			var response []domain.Chat
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			require.NoError(t, err, "Response should be valid JSON array")

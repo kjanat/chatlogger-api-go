@@ -57,15 +57,15 @@ func TestConcurrentChatCreation(t *testing.T) {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
-			
+
 			for j := 0; j < chatsPerGoroutine; j++ {
 				chat := fixtures.CreateTestChat(user.ID)
 				chat.OrganizationID = org.ID
 				chat.Title = fmt.Sprintf("Chat %d-%d", goroutineID, j)
-				
+
 				err := repo.Create(chat)
 				results <- err
-				
+
 				if err == nil {
 					createdIDs <- chat.ID
 				}
@@ -150,7 +150,7 @@ func TestConcurrentReadWrite(t *testing.T) {
 		wg.Add(1)
 		go func(updateID int) {
 			defer wg.Done()
-			
+
 			chatToUpdate := &domain.Chat{
 				ID:             chat.ID,
 				OrganizationID: org.ID,
@@ -161,7 +161,7 @@ func TestConcurrentReadWrite(t *testing.T) {
 				CreatedAt:      chat.CreatedAt,
 				UpdatedAt:      time.Now(),
 			}
-			
+
 			err := repo.Update(chatToUpdate)
 			errors <- err
 		}(i)
@@ -232,7 +232,7 @@ func TestConcurrentConnectionHandling(t *testing.T) {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
-			
+
 			for j := 0; j < operationsPerGoroutine; j++ {
 				// Mix of operations to stress connection pool
 				switch j % 3 {
@@ -242,11 +242,11 @@ func TestConcurrentConnectionHandling(t *testing.T) {
 					chat.Title = fmt.Sprintf("Chat %d-%d", goroutineID, j)
 					err := repo.Create(chat)
 					errors <- err
-					
+
 				case 1:
 					_, err := repo.FindByOrganizationID(org.ID, 5, 0)
 					errors <- err
-					
+
 				case 2:
 					// Simulate longer operation
 					time.Sleep(time.Millisecond * 10)
@@ -305,7 +305,7 @@ func TestRaceConditionInTransactions(t *testing.T) {
 		wg.Add(1)
 		go func(txID int) {
 			defer wg.Done()
-			
+
 			// Start transaction
 			tx := db.Begin()
 			if tx.Error != nil {
@@ -316,11 +316,11 @@ func TestRaceConditionInTransactions(t *testing.T) {
 			// Create chat in transaction
 			txWrapper := &Database{DB: tx}
 			txChatRepo := NewChatRepository(txWrapper)
-			
+
 			chat := fixtures.CreateTestChat(user.ID)
 			chat.OrganizationID = org.ID
 			chat.Title = fmt.Sprintf("Transaction Chat %d", txID)
-			
+
 			err := txChatRepo.Create(chat)
 			if err != nil {
 				tx.Rollback()
@@ -332,7 +332,7 @@ func TestRaceConditionInTransactions(t *testing.T) {
 			txMessageRepo := NewMessageRepository(txWrapper)
 			message := fixtures.CreateTestMessage(chat.ID)
 			message.Content = fmt.Sprintf("Transaction Message %d", txID)
-			
+
 			err = txMessageRepo.Create(message)
 			if err != nil {
 				tx.Rollback()
@@ -410,12 +410,12 @@ func TestMemoryRaceConditions(t *testing.T) {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
-			
+
 			// Create chat (this tests database-level concurrency)
 			chat := fixtures.CreateTestChat(user.ID)
 			chat.OrganizationID = org.ID
 			chat.Title = fmt.Sprintf("Race Test Chat %d", goroutineID)
-			
+
 			err := repo.Create(chat)
 			if err != nil {
 				errors <- err
@@ -477,16 +477,16 @@ func TestGoroutineLeaks(t *testing.T) {
 	const iterations = 10
 	for i := 0; i < iterations; i++ {
 		var wg sync.WaitGroup
-		
+
 		for j := 0; j < 10; j++ {
 			wg.Add(1)
 			go func(opID int) {
 				defer wg.Done()
-				
+
 				chat := fixtures.CreateTestChat(user.ID)
 				chat.OrganizationID = org.ID
 				repo.Create(chat)
-				
+
 				// Force some work to potentially leak
 				done := make(chan bool)
 				go func() {
@@ -496,9 +496,9 @@ func TestGoroutineLeaks(t *testing.T) {
 				<-done
 			}(j)
 		}
-		
+
 		wg.Wait()
-		
+
 		// Force garbage collection
 		runtime.GC()
 		runtime.GC()
@@ -509,7 +509,7 @@ func TestGoroutineLeaks(t *testing.T) {
 	runtime.GC()
 
 	finalGoroutines := runtime.NumGoroutine()
-	
+
 	// We allow some tolerance for background goroutines
 	goroutineDiff := finalGoroutines - initialGoroutines
 	assert.LessOrEqual(t, goroutineDiff, 5, "Should not leak significant number of goroutines (leaked: %d)", goroutineDiff)
@@ -555,17 +555,17 @@ func TestDataRaceInStats(t *testing.T) {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
-			
+
 			// Get tag stats
 			_, err := repo.GetTagStats(org.ID)
 			errors <- err
-			
+
 			// Get count by date range
 			start := time.Now().AddDate(0, 0, -1)
 			end := time.Now()
 			_, err = repo.CountByOrgIDAndDateRange(org.ID, start, end)
 			errors <- err
-			
+
 			// Create new chat while others are reading stats
 			if goroutineID%2 == 0 {
 				chat := fixtures.CreateTestChat(user.ID)

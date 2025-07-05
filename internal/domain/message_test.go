@@ -168,12 +168,12 @@ func TestMessage_SetMetadata(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				
+
 				// Parse both JSON strings to compare structure
 				var expected, actual map[string]interface{}
 				err1 := json.Unmarshal([]byte(tt.expected), &expected)
 				err2 := json.Unmarshal([]byte(message.Metadata), &actual)
-				
+
 				require.NoError(t, err1)
 				require.NoError(t, err2)
 				assert.Equal(t, expected, actual)
@@ -255,19 +255,19 @@ func TestMessage_MetadataRoundTrip(t *testing.T) {
 		TokenCount:   500,
 		ResponseTime: 2500.75,
 	}
-	
+
 	err := message.SetMetadata(originalMetadata)
 	require.NoError(t, err)
-	
+
 	retrievedMetadata, err := message.GetMetadata()
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, originalMetadata, retrievedMetadata)
 }
 
 func TestMessage_Struct(t *testing.T) {
 	now := time.Now()
-	
+
 	message := &Message{
 		ID:        1,
 		ChatID:    100,
@@ -276,7 +276,7 @@ func TestMessage_Struct(t *testing.T) {
 		Metadata:  `{"token_count":50}`,
 		CreatedAt: now,
 	}
-	
+
 	assert.Equal(t, uint64(1), message.ID)
 	assert.Equal(t, uint64(100), message.ChatID)
 	assert.Equal(t, MessageRoleUser, message.Role)

@@ -16,9 +16,9 @@ import (
 )
 
 // SetupTestDB creates a test database connection
-func SetupTestDB(t *testing.T) *gorm.DB {
+func SetupTestDB(t testing.TB) *gorm.DB {
 	t.Helper()
-	
+
 	// Try in-memory SQLite first for faster tests
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
@@ -29,7 +29,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		if testDBURL == "" {
 			t.Skip("No database available for integration tests")
 		}
-		
+
 		db, err = gorm.Open(postgres.Open(testDBURL), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Silent),
 		})
@@ -37,49 +37,49 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 			t.Skipf("Failed to connect to test database: %v", err)
 		}
 	}
-	
+
 	// Auto-migrate schemas for testing
 	if err := AutoMigrateTestSchema(db); err != nil {
 		t.Fatalf("Failed to migrate test schema: %v", err)
 	}
-	
+
 	// Verify tables exist
 	var tableCount int64
 	db.Raw("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('organizations', 'users', 'chats', 'messages', 'api_keys', 'exports')").Scan(&tableCount)
 	if tableCount == 0 {
 		t.Fatalf("No tables created after migration")
 	}
-	
+
 	return db
 }
 
 // CleanupTestDB cleans up test database
-func CleanupTestDB(t *testing.T, db *gorm.DB) {
+func CleanupTestDB(t testing.TB, db *gorm.DB) {
 	t.Helper()
-	
+
 	sqlDB, err := db.DB()
 	if err != nil {
 		t.Errorf("Failed to get underlying sql.DB: %v", err)
 		return
 	}
-	
+
 	// Clean up tables in reverse order to avoid foreign key constraints
 	tables := []string{
 		"exports",
 		"api_keys",
 		"messages",
-		"chats", 
+		"chats",
 		"users",
 		"organizations",
 	}
-	
+
 	for _, table := range tables {
 		if err := db.Exec(fmt.Sprintf("DELETE FROM %s", table)).Error; err != nil {
 			// Ignore errors for tables that might not exist
 			t.Logf("Warning: Failed to clean table %s: %v", table, err)
 		}
 	}
-	
+
 	sqlDB.Close()
 }
 
@@ -121,10 +121,10 @@ func AutoMigrateTestSchema(db *gorm.DB) error {
 		&domain.APIKey{},
 		&domain.Export{},
 	)
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to auto-migrate schema: %w", err)
 	}
-	
+
 	return nil
 }

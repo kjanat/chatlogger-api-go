@@ -204,10 +204,10 @@ func TestChat_SetMetadata(t *testing.T) {
 		{
 			name: "partial metadata",
 			metadata: &ChatMetadata{
-				IPAddress:   "10.0.0.1",
-				Sentiment:   "neutral",
-				TokenCount:  75,
-				UserRating:  intPtr(4),
+				IPAddress:  "10.0.0.1",
+				Sentiment:  "neutral",
+				TokenCount: 75,
+				UserRating: intPtr(4),
 			},
 			expected: `{"ip_address":"10.0.0.1","sentiment":"neutral","token_count":75,"user_rating":4}`,
 			hasError: false,
@@ -223,12 +223,12 @@ func TestChat_SetMetadata(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				
+
 				// Parse both JSON strings to compare structure
 				var expected, actual map[string]interface{}
 				err1 := json.Unmarshal([]byte(tt.expected), &expected)
 				err2 := json.Unmarshal([]byte(chat.Metadata), &actual)
-				
+
 				require.NoError(t, err1)
 				require.NoError(t, err2)
 				assert.Equal(t, expected, actual)
@@ -240,13 +240,13 @@ func TestChat_SetMetadata(t *testing.T) {
 func TestChat_TagsRoundTrip(t *testing.T) {
 	chat := &Chat{}
 	originalTags := []string{"test", "roundtrip", "tags"}
-	
+
 	err := chat.SetTags(originalTags)
 	require.NoError(t, err)
-	
+
 	retrievedTags, err := chat.GetTags()
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, originalTags, retrievedTags)
 }
 
@@ -266,13 +266,13 @@ func TestChat_MetadataRoundTrip(t *testing.T) {
 		QuestionCategory: "technical",
 		UserRating:       intPtr(5),
 	}
-	
+
 	err := chat.SetMetadata(originalMetadata)
 	require.NoError(t, err)
-	
+
 	retrievedMetadata, err := chat.GetMetadata()
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, originalMetadata, retrievedMetadata)
 }
 

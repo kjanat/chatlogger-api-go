@@ -9,7 +9,7 @@ import (
 
 func TestOrganization_Struct(t *testing.T) {
 	now := time.Now()
-	
+
 	org := &Organization{
 		ID:        1,
 		Name:      "Test Organization",
@@ -18,7 +18,7 @@ func TestOrganization_Struct(t *testing.T) {
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
-	
+
 	assert.Equal(t, uint64(1), org.ID)
 	assert.Equal(t, "Test Organization", org.Name)
 	assert.Equal(t, "test-org", org.Slug)
@@ -39,7 +39,7 @@ func TestOrganization_EmptySettings(t *testing.T) {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	
+
 	assert.Empty(t, org.Settings)
 }
 
@@ -61,7 +61,7 @@ func TestOrganization_JSONSettings(t *testing.T) {
 			settings: "null",
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			org := &Organization{
@@ -72,7 +72,7 @@ func TestOrganization_JSONSettings(t *testing.T) {
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			}
-			
+
 			assert.Equal(t, tc.settings, org.Settings)
 		})
 	}
@@ -100,7 +100,7 @@ func TestOrganization_SlugValidation(t *testing.T) {
 			slug: "org",
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			org := &Organization{
@@ -110,7 +110,7 @@ func TestOrganization_SlugValidation(t *testing.T) {
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			}
-			
+
 			assert.Equal(t, tc.slug, org.Slug)
 		})
 	}
@@ -127,7 +127,7 @@ func TestOrganization_Relationships(t *testing.T) {
 		Users:     []User{},
 		Chats:     []Chat{},
 	}
-	
+
 	// Test that relationship slices are initialized but empty
 	assert.NotNil(t, org.APIKeys)
 	assert.NotNil(t, org.Users)

@@ -51,7 +51,7 @@ func TestDatabaseMigrations(t *testing.T) {
 					AND table_name = ?
 				)
 			`, table).Scan(&exists).Error
-			
+
 			require.NoError(t, err)
 			assert.True(t, exists, "Table %s should exist after migration", table)
 		}
@@ -71,7 +71,7 @@ func TestDatabaseMigrations(t *testing.T) {
 					AND indexname = ?
 				)
 			`, index).Scan(&exists).Error
-			
+
 			require.NoError(t, err)
 			assert.True(t, exists, "Index %s should exist after migration", index)
 		}
@@ -94,14 +94,14 @@ func TestDatabaseMigrations(t *testing.T) {
 				AND table_name = 'exports'
 			)
 		`).Scan(&exists).Error
-		
+
 		require.NoError(t, err)
 		assert.True(t, exists, "Exports table should exist after migration")
 
 		// Verify exports table columns
 		expectedColumns := map[string]string{
 			"id":              "bigint",
-			"organization_id": "bigint", 
+			"organization_id": "bigint",
 			"user_id":         "bigint",
 			"format":          "character varying",
 			"type":            "character varying",
@@ -122,7 +122,7 @@ func TestDatabaseMigrations(t *testing.T) {
 				AND table_name = 'exports' 
 				AND column_name = ?
 			`, column).Scan(&dataType).Error
-			
+
 			require.NoError(t, err)
 			assert.Equal(t, expectedType, dataType, "Column %s should have type %s", column, expectedType)
 		}
@@ -143,7 +143,7 @@ func TestDatabaseMigrations(t *testing.T) {
 					AND constraint_type = 'FOREIGN KEY'
 				)
 			`, fk).Scan(&exists).Error
-			
+
 			require.NoError(t, err)
 			assert.True(t, exists, "Foreign key %s should exist", fk)
 		}
@@ -157,14 +157,14 @@ func TestDatabaseMigrations(t *testing.T) {
 				AND routine_name = 'update_exports_updated_at'
 			)
 		`).Scan(&triggerExists).Error
-		
+
 		require.NoError(t, err)
 		assert.True(t, triggerExists, "Trigger function should exist")
 	})
 
 	t.Run("Schema Validation", func(t *testing.T) {
 		// Test that we can insert valid data into all tables
-		
+
 		// Insert organization
 		var orgID int64
 		err := db.Raw(`
@@ -218,21 +218,21 @@ func TestDatabaseMigrations(t *testing.T) {
 
 	t.Run("Data Integrity Constraints", func(t *testing.T) {
 		// Test foreign key constraints
-		
+
 		// Should fail: Invalid organization_id in users table
 		err := db.Exec(`
 			INSERT INTO users (email, password_hash, role, organization_id) 
 			VALUES ('invalid@example.com', 'hash', 'user', 99999)
 		`).Error
 		assert.Error(t, err, "Should fail with invalid organization_id")
-		
+
 		// Should fail: Invalid role in users table
 		err = db.Exec(`
 			INSERT INTO users (email, password_hash, role, organization_id) 
 			VALUES ('invalid@example.com', 'hash', 'invalid_role', 1)
 		`).Error
 		assert.Error(t, err, "Should fail with invalid role")
-		
+
 		// Should fail: Invalid role in messages table
 		err = db.Exec(`
 			INSERT INTO messages (chat_id, role, content) 
@@ -275,7 +275,7 @@ func TestMigrationRollback(t *testing.T) {
 				AND table_name = ?
 			)
 		`, table).Scan(&exists).Error
-		
+
 		require.NoError(t, err)
 		assert.False(t, exists, "Table %s should not exist after rollback", table)
 	}
@@ -302,7 +302,7 @@ func TestMigrationPerformance(t *testing.T) {
 		// Apply base migration
 		migration001, err := os.ReadFile("../../migrations/001_initial_schema.sql")
 		require.NoError(t, err)
-		
+
 		err = db.Exec(string(migration001)).Error
 		require.NoError(t, err)
 
@@ -318,7 +318,7 @@ func TestMigrationPerformance(t *testing.T) {
 		// Apply exports migration on existing data
 		migration003, err := os.ReadFile("../../migrations/003_add_exports_table.sql")
 		require.NoError(t, err)
-		
+
 		err = db.Exec(string(migration003)).Error
 		require.NoError(t, err)
 

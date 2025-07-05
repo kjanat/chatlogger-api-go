@@ -298,7 +298,7 @@ func TestGenerateJWT(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
-	
+
 	// Token should be a valid JWT (contains two dots)
 	assert.Equal(t, 2, countOccurrences(token, "."))
 }

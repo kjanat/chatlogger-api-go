@@ -8,13 +8,16 @@ import (
 	"github.com/kjanat/chatlogger-api-go/internal/domain"
 	"github.com/kjanat/chatlogger-api-go/test/fixtures"
 	"github.com/kjanat/chatlogger-api-go/test/mocks"
+	"github.com/kjanat/chatlogger-api-go/test/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 func TestChatService_CreateChat(t *testing.T) {
-	mockRepo := &mocks.MockChatRepository{}
+	// Using new mock builder pattern
+	mockRepo := mocks.NewMockChatRepositoryBuilder().
+		WithCreateReturns(nil).
+		Build()
 	service := NewChatService(mockRepo)
 
 	chat := &domain.Chat{
@@ -25,53 +28,52 @@ func TestChatService_CreateChat(t *testing.T) {
 		Metadata:       `{"test": true}`,
 	}
 
-	mockRepo.On("Create", mock.AnythingOfType("*domain.Chat")).Return(nil)
-
 	err := service.CreateChat(chat)
 
-	assert.NoError(t, err)
+	testutils.ServiceError(t, err, "ChatService", "CreateChat")
 	assert.NotZero(t, chat.CreatedAt)
 	assert.NotZero(t, chat.UpdatedAt)
 	mockRepo.AssertExpectations(t)
 }
 
 func TestChatService_CreateChat_RepositoryError(t *testing.T) {
-	mockRepo := &mocks.MockChatRepository{}
-	service := NewChatService(mockRepo)
-
 	chat := fixtures.CreateTestChat(1)
 	expectedError := errors.New("database error")
 
-	mockRepo.On("Create", mock.AnythingOfType("*domain.Chat")).Return(expectedError)
+	// Using builder pattern for error scenario
+	mockRepo := mocks.NewMockChatRepositoryBuilder().
+		WithCreateReturns(expectedError).
+		Build()
+	service := NewChatService(mockRepo)
 
 	err := service.CreateChat(chat)
 
-	assert.Error(t, err)
-	assert.Equal(t, expectedError, err)
+	testutils.ExpectErrorWithMessage(t, err, "database error", "CreateChat with repository error")
 	mockRepo.AssertExpectations(t)
 }
 
 func TestChatService_GetByID(t *testing.T) {
-	mockRepo := &mocks.MockChatRepository{}
-	service := NewChatService(mockRepo)
-
 	expectedChat := fixtures.CreateTestChat(1)
 	expectedChat.ID = 1
 
-	mockRepo.On("FindByID", uint64(1)).Return(expectedChat, nil)
+	// Using builder pattern with specific return values
+	mockRepo := mocks.NewMockChatRepositoryBuilder().
+		WithFindByIDReturns(expectedChat, nil).
+		Build()
+	service := NewChatService(mockRepo)
 
 	chat, err := service.GetByID(1)
 
-	assert.NoError(t, err)
+	testutils.ServiceError(t, err, "ChatService", "GetByID")
 	assert.Equal(t, expectedChat, chat)
 	mockRepo.AssertExpectations(t)
 }
 
 func TestChatService_GetByID_NotFound(t *testing.T) {
-	mockRepo := &mocks.MockChatRepository{}
+	// Using scenario builder for common case
+	scenario := mocks.NewScenarioBuilder()
+	mockRepo := scenario.ChatNotFoundScenario()
 	service := NewChatService(mockRepo)
-
-	mockRepo.On("FindByID", uint64(999)).Return((*domain.Chat)(nil), nil)
 
 	chat, err := service.GetByID(999)
 
@@ -81,15 +83,16 @@ func TestChatService_GetByID_NotFound(t *testing.T) {
 }
 
 func TestChatService_GetByOrganizationID(t *testing.T) {
-	mockRepo := &mocks.MockChatRepository{}
-	service := NewChatService(mockRepo)
-
 	expectedChats := []domain.Chat{
 		*fixtures.CreateTestChat(1),
 		*fixtures.CreateTestChat(1),
 	}
 
-	mockRepo.On("FindByOrganizationID", uint64(1), 10, 0).Return(expectedChats, nil)
+	// Using builder pattern for list operations
+	mockRepo := mocks.NewMockChatRepositoryBuilder().
+		WithFindByOrganizationIDReturns(expectedChats, nil).
+		Build()
+	service := NewChatService(mockRepo)
 
 	chats, err := service.GetByOrganizationID(1, 10, 0)
 
@@ -116,9 +119,6 @@ func TestChatService_GetByUserID(t *testing.T) {
 }
 
 func TestChatService_UpdateChat(t *testing.T) {
-	mockRepo := &mocks.MockChatRepository{}
-	service := NewChatService(mockRepo)
-
 	existingChat := fixtures.CreateTestChat(1)
 	existingChat.ID = 1
 
@@ -131,8 +131,12 @@ func TestChatService_UpdateChat(t *testing.T) {
 		Metadata:       `{"updated": true}`,
 	}
 
-	mockRepo.On("FindByID", uint64(1)).Return(existingChat, nil)
-	mockRepo.On("Update", mock.AnythingOfType("*domain.Chat")).Return(nil)
+	// Using builder pattern to chain multiple mock setups
+	mockRepo := mocks.NewMockChatRepositoryBuilder().
+		WithFindByIDReturns(existingChat, nil).
+		WithUpdateReturns(nil).
+		Build()
+	service := NewChatService(mockRepo)
 
 	err := service.UpdateChat(chatToUpdate)
 
@@ -201,13 +205,10 @@ func TestChatService_DeleteChat_Error(t *testing.T) {
 }
 
 func TestChatService_GetChatStats(t *testing.T) {
-	mockRepo := &mocks.MockChatRepository{}
-	service := NewChatService(mockRepo)
-
 	orgID := uint64(1)
 	start := time.Now().AddDate(0, 0, -7)
 	end := time.Now()
-	
+
 	expectedChatCount := int64(10)
 	expectedTagStats := map[string]int64{
 		"support":   5,
@@ -215,20 +216,24 @@ func TestChatService_GetChatStats(t *testing.T) {
 		"general":   2,
 	}
 
-	mockRepo.On("CountByOrgIDAndDateRange", orgID, mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(expectedChatCount, nil)
-	mockRepo.On("GetTagStats", orgID).Return(expectedTagStats, nil)
+	// Using builder pattern for complex stats operations
+	mockRepo := mocks.NewMockChatRepositoryBuilder().
+		WithCountByOrgIDAndDateRangeReturns(expectedChatCount, nil).
+		WithGetTagStatsReturns(expectedTagStats, nil).
+		Build()
+	service := NewChatService(mockRepo)
 
 	stats, err := service.GetChatStats(orgID, start, end)
 
-	require.NoError(t, err)
+	testutils.ServiceError(t, err, "ChatService", "GetChatStats")
 	assert.Equal(t, expectedChatCount, stats["total_chats"])
 	assert.Equal(t, expectedTagStats, stats["tag_stats"])
-	
+
 	dateRange, ok := stats["date_range"].(map[string]string)
-	require.True(t, ok)
+	assert.True(t, ok, "date_range should be a map[string]string")
 	assert.NotEmpty(t, dateRange["start"])
 	assert.NotEmpty(t, dateRange["end"])
-	
+
 	mockRepo.AssertExpectations(t)
 }
 
@@ -268,6 +273,37 @@ func TestChatService_GetChatStats_TagStatsError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, stats)
 	assert.Contains(t, err.Error(), "error getting tag stats")
+	mockRepo.AssertExpectations(t)
+}
+
+// Example test showing integration with builder pattern for specific operations
+func TestChatService_Integration_BuilderPattern(t *testing.T) {
+	// Using the test setup with focused mock configuration
+	setup := mocks.NewServiceTestSetup()
+	mockRepo := mocks.NewMockChatRepositoryBuilder().
+		WithCreateReturns(nil).
+		WithFindByIDReturns(setup.Chat, nil).
+		WithFindByOrganizationIDReturns([]domain.Chat{*setup.Chat}, nil).
+		Build()
+	service := NewChatService(mockRepo)
+
+	// Test create operation
+	err := service.CreateChat(setup.Chat)
+	assert.NoError(t, err)
+
+	// Test get operation
+	chat, err := service.GetByID(setup.Chat.ID)
+	assert.NoError(t, err)
+	assert.NotNil(t, chat)
+	assert.Equal(t, setup.Chat.ID, chat.ID)
+	assert.Equal(t, setup.Chat.Title, chat.Title)
+
+	// Test list operation
+	chats, err := service.GetByOrganizationID(setup.Org.ID, 10, 0)
+	assert.NoError(t, err)
+	assert.Len(t, chats, 1)
+	assert.Equal(t, setup.Chat.ID, chats[0].ID)
+
 	mockRepo.AssertExpectations(t)
 }
 

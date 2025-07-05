@@ -12,8 +12,8 @@ import (
 type AppConfig struct {
 	ExportDir string
 	APIServer struct {
-		Host string
-		Port string
+		Host   string
+		Port   string
 		Scheme string
 	}
 }

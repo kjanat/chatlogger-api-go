@@ -109,12 +109,12 @@ func main() {
 		Config: &api.AppConfig{
 			ExportDir: cfg.ExportDir,
 			APIServer: struct {
-				Host string
-				Port string
+				Host   string
+				Port   string
 				Scheme string
 			}{
-				Host: cfg.ApiServer.Host,
-				Port: cfg.ApiServer.Port,
+				Host:   cfg.ApiServer.Host,
+				Port:   cfg.ApiServer.Port,
 				Scheme: cfg.ApiServer.Scheme,
 			},
 		},

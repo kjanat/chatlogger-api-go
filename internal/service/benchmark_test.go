@@ -67,7 +67,7 @@ func BenchmarkChatService_GetByOrganizationID(b *testing.B) {
 	b.Run("SmallResult", func(b *testing.B) {
 		smallChats := testChats[:1]
 		mockRepo.On("FindByOrganizationID", uint64(1), 10, 0).Return(smallChats, nil)
-		
+
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
@@ -84,9 +84,9 @@ func BenchmarkChatService_GetByOrganizationID(b *testing.B) {
 		for i := range mediumChats {
 			mediumChats[i] = *fixtures.CreateTestChat(1)
 		}
-		
+
 		mockRepo.On("FindByOrganizationID", uint64(2), 50, 0).Return(mediumChats, nil)
-		
+
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
@@ -103,9 +103,9 @@ func BenchmarkChatService_GetByOrganizationID(b *testing.B) {
 		for i := range largeChats {
 			largeChats[i] = *fixtures.CreateTestChat(1)
 		}
-		
+
 		mockRepo.On("FindByOrganizationID", uint64(3), 200, 0).Return(largeChats, nil)
-		
+
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
@@ -141,7 +141,7 @@ func BenchmarkChatService_UpdateChat(b *testing.B) {
 				Tags:           `["updated"]`,
 				Metadata:       `{"updated": true}`,
 			}
-			
+
 			err := service.UpdateChat(chatToUpdate)
 			if err != nil {
 				b.Fatalf("Failed to update chat: %v", err)
@@ -156,9 +156,9 @@ func BenchmarkChatService_GetChatStats(b *testing.B) {
 	service := NewChatService(mockRepo)
 
 	// Setup mock responses for stats
-	mockRepo.On("CountByOrgIDAndDateRange", mock.AnythingOfType("uint64"), 
+	mockRepo.On("CountByOrgIDAndDateRange", mock.AnythingOfType("uint64"),
 		mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(int64(1000), nil)
-	
+
 	tagStats := map[string]int64{
 		"support":   500,
 		"technical": 300,
@@ -238,7 +238,7 @@ func BenchmarkUserService_Register(b *testing.B) {
 				LastName:       "User",
 				OrganizationID: 1,
 			}
-			
+
 			err := service.Register(user, "securepassword123")
 			if err != nil {
 				b.Fatalf("Failed to register user: %v", err)
@@ -252,7 +252,7 @@ func BenchmarkUserService_Register(b *testing.B) {
 func BenchmarkConcurrentServiceCalls(b *testing.B) {
 	mockChatRepo := &mocks.MockChatRepository{}
 	mockUserRepo := &mocks.MockUserRepository{}
-	
+
 	chatService := NewChatService(mockChatRepo)
 	userService := NewUserService(mockUserRepo, "test-jwt-secret")
 
@@ -264,11 +264,11 @@ func BenchmarkConcurrentServiceCalls(b *testing.B) {
 
 	mockChatRepo.On("Create", mock.AnythingOfType("*domain.Chat")).Return(nil)
 	mockChatRepo.On("FindByID", mock.AnythingOfType("uint64")).Return(testChat, nil)
-	mockChatRepo.On("FindByOrganizationID", mock.AnythingOfType("uint64"), 
+	mockChatRepo.On("FindByOrganizationID", mock.AnythingOfType("uint64"),
 		mock.AnythingOfType("int"), mock.AnythingOfType("int")).Return([]domain.Chat{*testChat}, nil)
-	
+
 	mockUserRepo.On("FindByID", mock.AnythingOfType("uint64")).Return(testUser, nil)
-	mockUserRepo.On("FindByOrganizationID", mock.AnythingOfType("uint64"), 
+	mockUserRepo.On("FindByOrganizationID", mock.AnythingOfType("uint64"),
 		mock.AnythingOfType("int"), mock.AnythingOfType("int")).Return([]domain.User{*testUser}, nil)
 
 	b.ResetTimer()
@@ -377,4 +377,3 @@ func BenchmarkMemoryAllocation(b *testing.B) {
 func uint64Ptr(i uint64) *uint64 {
 	return &i
 }
-

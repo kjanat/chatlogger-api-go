@@ -28,7 +28,7 @@ func createTestJWT(userID, orgID uint64, role domain.Role, secret string) (strin
 			NotBefore: jwt.NewNumericDate(time.Now()),
 		},
 	}
-	
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
 }
@@ -36,33 +36,33 @@ func createTestJWT(userID, orgID uint64, role domain.Role, secret string) (strin
 func TestJWTAuth_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	jwtSecret := "test-secret"
 	tokenString, err := createTestJWT(1, 100, domain.RoleUser, jwtSecret)
 	assert.NoError(t, err)
-	
+
 	router.Use(JWTAuth(jwtSecret))
 	router.GET("/test", func(c *gin.Context) {
 		userID, _ := c.Get(UserIDKey)
 		orgID, _ := c.Get(OrganizationIDKey)
 		role, _ := c.Get(RoleKey)
-		
+
 		c.JSON(http.StatusOK, gin.H{
 			"user_id": userID,
 			"org_id":  orgID,
 			"role":    role,
 		})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.AddCookie(&http.Cookie{
 		Name:  "auth_token",
 		Value: tokenString,
 	})
-	
+
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), `"user_id":1`)
 	assert.Contains(t, w.Body.String(), `"org_id":100`)
@@ -72,16 +72,16 @@ func TestJWTAuth_Success(t *testing.T) {
 func TestJWTAuth_NoCookie(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	router.Use(JWTAuth("test-secret"))
 	router.GET("/test", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	assert.Contains(t, w.Body.String(), "authentication required")
 }
@@ -89,21 +89,21 @@ func TestJWTAuth_NoCookie(t *testing.T) {
 func TestJWTAuth_InvalidToken(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	router.Use(JWTAuth("test-secret"))
 	router.GET("/test", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.AddCookie(&http.Cookie{
 		Name:  "auth_token",
 		Value: "invalid.jwt.token",
 	})
-	
+
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	assert.Contains(t, w.Body.String(), "invalid token")
 }
@@ -111,9 +111,9 @@ func TestJWTAuth_InvalidToken(t *testing.T) {
 func TestJWTAuth_ExpiredToken(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	jwtSecret := "test-secret"
-	
+
 	// Create expired token
 	claims := &service.JWTClaims{
 		UserID:         1,
@@ -125,25 +125,25 @@ func TestJWTAuth_ExpiredToken(t *testing.T) {
 			IssuedAt:  jwt.NewNumericDate(time.Now().Add(-2 * time.Hour)),
 		},
 	}
-	
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(jwtSecret))
 	assert.NoError(t, err)
-	
+
 	router.Use(JWTAuth(jwtSecret))
 	router.GET("/test", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.AddCookie(&http.Cookie{
 		Name:  "auth_token",
 		Value: tokenString,
 	})
-	
+
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	assert.Contains(t, w.Body.String(), "invalid token")
 }
@@ -151,7 +151,7 @@ func TestJWTAuth_ExpiredToken(t *testing.T) {
 func TestAPIKeyAuth_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	mockAPIKeyService := &mocks.MockAPIKeyService{}
 	apiKey := &domain.APIKey{
 		ID:             1,
@@ -159,9 +159,9 @@ func TestAPIKeyAuth_Success(t *testing.T) {
 		HashedKey:      "$2a$10$hashed.api.key",
 		Label:          "Test Key",
 	}
-	
+
 	mockAPIKeyService.On("ValidateKey", "test-api-key").Return(apiKey, nil)
-	
+
 	router.Use(APIKeyAuth(mockAPIKeyService))
 	router.GET("/test", func(c *gin.Context) {
 		orgID, _ := c.Get(OrganizationIDKey)
@@ -169,34 +169,34 @@ func TestAPIKeyAuth_Success(t *testing.T) {
 			"org_id": orgID,
 		})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.Header.Set("x-organization-api-key", "test-api-key")
-	
+
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), `"org_id":100`)
-	
+
 	mockAPIKeyService.AssertExpectations(t)
 }
 
 func TestAPIKeyAuth_NoHeader(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	mockAPIKeyService := &mocks.MockAPIKeyService{}
-	
+
 	router.Use(APIKeyAuth(mockAPIKeyService))
 	router.GET("/test", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	assert.Contains(t, w.Body.String(), "API key required")
 }
@@ -204,31 +204,31 @@ func TestAPIKeyAuth_NoHeader(t *testing.T) {
 func TestAPIKeyAuth_InvalidKey(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	mockAPIKeyService := &mocks.MockAPIKeyService{}
 	mockAPIKeyService.On("ValidateKey", "invalid-key").Return((*domain.APIKey)(nil), nil)
-	
+
 	router.Use(APIKeyAuth(mockAPIKeyService))
 	router.GET("/test", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.Header.Set("x-organization-api-key", "invalid-key")
-	
+
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	assert.Contains(t, w.Body.String(), "invalid API key")
-	
+
 	mockAPIKeyService.AssertExpectations(t)
 }
 
 func TestRoleRequired_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	router.Use(func(c *gin.Context) {
 		c.Set(RoleKey, domain.RoleAdmin)
 		c.Next()
@@ -237,18 +237,18 @@ func TestRoleRequired_Success(t *testing.T) {
 	router.GET("/test", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestRoleRequired_SuperAdmin(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	router.Use(func(c *gin.Context) {
 		c.Set(RoleKey, domain.RoleSuperAdmin)
 		c.Next()
@@ -257,18 +257,18 @@ func TestRoleRequired_SuperAdmin(t *testing.T) {
 	router.GET("/test", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestRoleRequired_InsufficientPermissions(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	router.Use(func(c *gin.Context) {
 		c.Set(RoleKey, domain.RoleViewer)
 		c.Next()
@@ -277,11 +277,11 @@ func TestRoleRequired_InsufficientPermissions(t *testing.T) {
 	router.GET("/test", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusForbidden, w.Code)
 	assert.Contains(t, w.Body.String(), "insufficient permissions")
 }
@@ -289,16 +289,16 @@ func TestRoleRequired_InsufficientPermissions(t *testing.T) {
 func TestRoleRequired_NoRole(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	router.Use(RoleRequired(domain.RoleUser))
 	router.GET("/test", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusForbidden, w.Code)
 	assert.Contains(t, w.Body.String(), "role information not available")
 }
@@ -306,7 +306,7 @@ func TestRoleRequired_NoRole(t *testing.T) {
 func TestValidateOrgAccess_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	router.Use(func(c *gin.Context) {
 		c.Set(OrganizationIDKey, uint64(100))
 		c.Set(RoleKey, domain.RoleUser)
@@ -316,18 +316,18 @@ func TestValidateOrgAccess_Success(t *testing.T) {
 	router.GET("/test/:orgID", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test/100", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestValidateOrgAccess_MeShorthand(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	router.Use(func(c *gin.Context) {
 		c.Set(OrganizationIDKey, uint64(100))
 		c.Set(RoleKey, domain.RoleUser)
@@ -337,18 +337,18 @@ func TestValidateOrgAccess_MeShorthand(t *testing.T) {
 	router.GET("/test/:orgID", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test/me", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestValidateOrgAccess_SuperAdminAccess(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	router.Use(func(c *gin.Context) {
 		c.Set(OrganizationIDKey, uint64(100))
 		c.Set(RoleKey, domain.RoleSuperAdmin)
@@ -358,18 +358,18 @@ func TestValidateOrgAccess_SuperAdminAccess(t *testing.T) {
 	router.GET("/test/:orgID", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test/200", nil) // Different org
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestValidateOrgAccess_Forbidden(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	router.Use(func(c *gin.Context) {
 		c.Set(OrganizationIDKey, uint64(100))
 		c.Set(RoleKey, domain.RoleUser)
@@ -379,11 +379,11 @@ func TestValidateOrgAccess_Forbidden(t *testing.T) {
 	router.GET("/test/:orgID", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test/200", nil) // Different org
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusForbidden, w.Code)
 	assert.Contains(t, w.Body.String(), "you do not have access to this organization")
 }
@@ -391,14 +391,14 @@ func TestValidateOrgAccess_Forbidden(t *testing.T) {
 func TestValidateSlugAccess_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	mockOrgService := &mocks.MockOrganizationService{}
 	org := fixtures.CreateTestOrganization()
 	org.ID = 100
 	org.Slug = "test-org"
-	
+
 	mockOrgService.On("GetBySlug", "test-org").Return(org, nil)
-	
+
 	router.Use(func(c *gin.Context) {
 		c.Set(OrganizationIDKey, uint64(100))
 		c.Set(RoleKey, domain.RoleUser)
@@ -408,28 +408,28 @@ func TestValidateSlugAccess_Success(t *testing.T) {
 	router.GET("/test/:slug", func(c *gin.Context) {
 		requestedOrgID, _ := c.Get(RequestedOrgIDKey)
 		c.JSON(http.StatusOK, gin.H{
-			"message":           "success",
+			"message":          "success",
 			"requested_org_id": requestedOrgID,
 		})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test/test-org", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), `"requested_org_id":100`)
-	
+
 	mockOrgService.AssertExpectations(t)
 }
 
 func TestValidateSlugAccess_OrgNotFound(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	mockOrgService := &mocks.MockOrganizationService{}
 	mockOrgService.On("GetBySlug", "nonexistent").Return((*domain.Organization)(nil), nil)
-	
+
 	router.Use(func(c *gin.Context) {
 		c.Set(OrganizationIDKey, uint64(100))
 		c.Set(RoleKey, domain.RoleUser)
@@ -439,28 +439,28 @@ func TestValidateSlugAccess_OrgNotFound(t *testing.T) {
 	router.GET("/test/:slug", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test/nonexistent", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	assert.Contains(t, w.Body.String(), "organization not found")
-	
+
 	mockOrgService.AssertExpectations(t)
 }
 
 func TestValidateSlugAccess_APIKeyAuth(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := testutils.SetupTestRouter()
-	
+
 	mockOrgService := &mocks.MockOrganizationService{}
 	org := fixtures.CreateTestOrganization()
 	org.ID = 100
 	org.Slug = "test-org"
-	
+
 	mockOrgService.On("GetBySlug", "test-org").Return(org, nil)
-	
+
 	router.Use(func(c *gin.Context) {
 		c.Set(OrganizationIDKey, uint64(100))
 		// No role set (API key auth scenario)
@@ -470,12 +470,12 @@ func TestValidateSlugAccess_APIKeyAuth(t *testing.T) {
 	router.GET("/test/:slug", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
-	
+
 	req := httptest.NewRequest("GET", "/test/test-org", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	mockOrgService.AssertExpectations(t)
 }
