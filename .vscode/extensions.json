@@ -1,13 +1,33 @@
 {
-    "recommendations": [
-        "42crunch.vscode-openapi",
-        "golang.Go",
-        "ms-ossdata.vscode-postgresql",
-        "ms-vscode-remote.remote-containers",
-        "mtxr.sqltools-driver-pg",
-        "mtxr.sqltools",
-        "supabase-snippets.supabase-javascript-snippets",
-        "supabase.postgrestools",
-        "supabase.vscode-supabase-extension",
-    ]
+  "recommendations": [
+    "golang.go",
+    "ms-vscode.vscode-json",
+    "redhat.vscode-yaml",
+    "ms-vscode-remote.remote-containers",
+    "ms-vscode-remote.remote-ssh",
+    "ms-vscode.remote-explorer",
+    "github.vscode-pull-request-github",
+    "github.copilot",
+    "github.copilot-chat",
+    "ms-vscode.test-adapter-converter",
+    "hbenl.vscode-test-explorer",
+    "davidanson.vscode-markdownlint",
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "ms-azuretools.vscode-docker",
+    "ms-vscode.makefile-tools",
+    "alefragnani.project-manager",
+    "gruntfuggly.todo-tree",
+    "streetsidesoftware.code-spell-checker",
+    "visualstudioexptteam.vscodeintellicode",
+    "github.vscode-github-actions",
+    "ms-vscode.vscode-typescript-next",
+    "ms-vscode.hexeditor",
+    "humao.rest-client"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-typescript"
+  ]
 }
+EOF < /dev/null

@@ -1,24 +1,120 @@
 {
-    "github-actions.workflows.pinned.workflows": [
-        ".github/workflows/version.yml",
-        ".github/workflows/release.yml",
-        ".github/workflows/docker.yml",
-        ".github/workflows/chatlogger-pipeline.yml"
-    ],
-    "go.diagnostic.vulncheck": "Imports",
-    "go.inlayHints.assignVariableTypes": true,
-    "go.inlayHints.compositeLiteralFields": true,
-    "go.inlayHints.compositeLiteralTypes": true,
-    "go.inlayHints.constantValues": true,
-    "go.inlayHints.functionTypeParameters": true,
-    "go.inlayHints.parameterNames": true,
-    "go.inlayHints.rangeVariableTypes": true,
-    "go.installDependenciesWhenBuilding": true,
-    "go.lintOnSave": "package",
-    "go.lintTool": "golangci-lint",
-    "go.toolsManagement.autoUpdate": true,
-    "gopls": {
-        "ui.semanticTokens": true
+  "go.toolsManagement.autoUpdate": true,
+  "go.useLanguageServer": true,
+  "go.lintOnSave": "package",
+  "go.formatTool": "goimports",
+  "go.lintTool": "golangci-lint",
+  "go.lintFlags": [
+    "--fast"
+  ],
+  "go.vetOnSave": "package",
+  "go.buildOnSave": "package",
+  "go.testOnSave": false,
+  "go.coverOnSave": false,
+  "go.coverOnTestPackage": true,
+  "go.coverageDecorator": {
+    "type": "gutter",
+    "coveredHighlightColor": "rgba(64,128,128,0.5)",
+    "uncoveredHighlightColor": "rgba(128,64,64,0.25)",
+    "coveredGutterStyle": "blockgreen",
+    "uncoveredGutterStyle": "blockred"
+  },
+  "go.testTimeout": "30s",
+  "go.testFlags": [
+    "-v",
+    "-race"
+  ],
+  "go.buildTags": "",
+  "go.buildFlags": [],
+  "go.installDependenciesWhenBuilding": true,
+  "go.gocodeAutoBuild": false,
+  "go.gopath": "",
+  "go.goroot": "",
+  "go.inferGopath": true,
+  "go.alternateTools": {
+    "go-langserver": "gopls"
+  },
+  "go.languageServerExperimentalFeatures": {
+    "diagnostics": true,
+    "documentLink": true
+  },
+  "go.delveConfig": {
+    "dlvLoadConfig": {
+      "followPointers": true,
+      "maxVariableRecurse": 1,
+      "maxStringLen": 64,
+      "maxArrayValues": 64,
+      "maxStructFields": -1
     },
-    "markdown.validate.enabled": true,
+    "apiVersion": 2,
+    "showGlobalVariables": true
+  },
+  
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "editor.rulers": [120],
+  "editor.tabSize": 4,
+  "editor.insertSpaces": false,
+  "editor.detectIndentation": false,
+  
+  "files.associations": {
+    "*.mod": "go",
+    "*.sum": "text",
+    "Dockerfile*": "dockerfile",
+    "*.yml": "yaml",
+    "*.yaml": "yaml"
+  },
+  
+  "files.exclude": {
+    "**/bin": true,
+    "**/coverage.txt": true,
+    "**/vendor": true,
+    "**/.env.local": true,
+    "**/.env.*.local": true
+  },
+  
+  "search.exclude": {
+    "**/bin": true,
+    "**/vendor": true,
+    "**/coverage.txt": true,
+    "**/*.log": true
+  },
+  
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": [
+      ".github/workflows/*.yml",
+      ".github/workflows/*.yaml"
+    ],
+    "https://json.schemastore.org/docker-compose.json": [
+      "docker-compose*.yml",
+      "docker-compose*.yaml"
+    ]
+  },
+  
+  "json.schemas": [
+    {
+      "fileMatch": [
+        "package.json"
+      ],
+      "url": "https://json.schemastore.org/package.json"
+    }
+  ],
+
+  "terminal.integrated.env.linux": {
+    "GO111MODULE": "on"
+  },
+  "terminal.integrated.env.osx": {
+    "GO111MODULE": "on"
+  },
+  "terminal.integrated.env.windows": {
+    "GO111MODULE": "on"
+  }
 }
+EOF < /dev/null

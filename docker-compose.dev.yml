@@ -1,0 +1,155 @@
+# Development Docker Compose Configuration
+# This extends the main docker-compose.yml with development-specific settings
+
+version: '3.8'
+
+services:
+  # Development API server with hot reloading
+  api-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: chatlogger-api-dev
+    ports:
+      - "8080:8080"
+      - "2345:2345"  # Delve debugger port
+    environment:
+      - DATABASE_URL=postgres://postgres:password@postgres:5432/chatlogger?sslmode=disable
+      - REDIS_ADDR=redis:6379
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - GIN_MODE=debug
+      - LOG_LEVEL=debug
+      - EXPORT_DIR=/app/exports
+    volumes:
+      - .:/app
+      - /app/bin  # Exclude bin directory
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - chatlogger-network
+    restart: unless-stopped
+    command: ["air", "-c", ".air.toml"]
+
+  # Development worker with hot reloading
+  worker-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: chatlogger-worker-dev
+    environment:
+      - DATABASE_URL=postgres://postgres:password@postgres:5432/chatlogger?sslmode=disable
+      - REDIS_ADDR=redis:6379
+      - LOG_LEVEL=debug
+    volumes:
+      - .:/app
+      - /app/bin
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - chatlogger-network
+    restart: unless-stopped
+    command: ["air", "-c", ".air.worker.toml"]
+
+  # PostgreSQL with development-friendly settings
+  postgres:
+    image: postgres:16-alpine
+    container_name: chatlogger-postgres-dev
+    environment:
+      POSTGRES_DB: chatlogger
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    networks:
+      - chatlogger-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d chatlogger"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis for development
+  redis:
+    image: redis:7-alpine
+    container_name: chatlogger-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - chatlogger-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # pgAdmin for database management (optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: chatlogger-pgadmin-dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@chatlogger.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_dev_data:/var/lib/pgadmin
+    networks:
+      - chatlogger-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    profiles:
+      - tools
+
+  # Redis Commander for Redis management (optional)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: chatlogger-redis-commander-dev
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    networks:
+      - chatlogger-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+    profiles:
+      - tools
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  pgadmin_dev_data:
+    driver: local
+  go-mod-cache:
+    driver: local
+  go-build-cache:
+    driver: local
+
+networks:
+  chatlogger-network:
+    driver: bridge
+EOF < /dev/null

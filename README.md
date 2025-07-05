@@ -60,6 +60,87 @@ The API is documented using Swagger/OpenAPI:
 - Redis (optional, for async exports)
 - Docker & Docker Compose (optional for containerized deployment)
 
+## 🛠️ Development Environment
+
+### Quick Setup
+
+For new contributors, run the automated setup script:
+
+```bash
+# Clone the repository
+git clone https://github.com/kjanat/chatlogger-api-go.git
+cd chatlogger-api-go
+
+# Run the development setup script
+./scripts/dev-setup.sh
+```
+
+This script will:
+- ✅ Check Go and Docker installation
+- ✅ Install development tools (golangci-lint, swag, etc.)
+- ✅ Set up environment configuration
+- ✅ Download Go dependencies
+- ✅ Start PostgreSQL and Redis with Docker
+- ✅ Run database migrations
+- ✅ Generate API documentation
+- ✅ Run basic tests to verify setup
+
+### Development Tools
+
+The project includes comprehensive tooling for development:
+
+```bash
+# Show all available commands
+make help
+
+# Start development environment
+make dev
+
+# Run tests with coverage
+make test-coverage
+
+# Run linting
+make lint
+
+# Run benchmarks
+make benchmark
+
+# Generate documentation
+make docs
+
+# Clean build artifacts
+make clean
+```
+
+### VS Code Configuration
+
+The project includes VS Code configuration for optimal development:
+
+- **Extensions**: Recommended extensions for Go development
+- **Settings**: Configured for Go formatting, linting, and testing
+- **Debug**: Pre-configured debug configurations for server and worker
+- **Tasks**: Common development tasks accessible via Ctrl+Shift+P
+
+### Code Quality
+
+Automated code quality checks include:
+
+- **Linting**: golangci-lint with comprehensive rules
+- **Formatting**: gofmt and goimports
+- **Security**: gosec security scanner
+- **Testing**: Race condition detection, benchmarks, coverage
+- **Dependencies**: Vulnerability scanning with govulncheck
+
+### CI/CD Pipeline
+
+GitHub Actions workflow includes:
+
+- **Lint**: Code quality and style checks
+- **Test**: Comprehensive test suite with PostgreSQL and Redis
+- **Security**: Security scanning and vulnerability checks
+- **Build**: Multi-architecture Docker builds
+- **Coverage**: Code coverage reporting to Codecov
+
 ## 🚀 Quick Start
 
 ### Running with Docker

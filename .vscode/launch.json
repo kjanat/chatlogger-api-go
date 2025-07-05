@@ -1,0 +1,88 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Server",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/server",
+      "env": {
+        "DATABASE_URL": "postgres://postgres:password@localhost:5432/chatlogger?sslmode=disable",
+        "JWT_SECRET": "your-secret-key",
+        "REDIS_ADDR": "localhost:6379",
+        "PORT": "8080",
+        "GIN_MODE": "debug"
+      },
+      "args": [],
+      "showLog": true,
+      "trace": "verbose",
+      "logOutput": "rpc"
+    },
+    {
+      "name": "Launch Worker",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/worker",
+      "env": {
+        "DATABASE_URL": "postgres://postgres:password@localhost:5432/chatlogger?sslmode=disable",
+        "REDIS_ADDR": "localhost:6379"
+      },
+      "args": [],
+      "showLog": true,
+      "trace": "verbose",
+      "logOutput": "rpc"
+    },
+    {
+      "name": "Debug Current Test",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}",
+      "env": {
+        "TEST_DATABASE_URL": "postgres://postgres:password@localhost:5432/chatlogger_test?sslmode=disable",
+        "REDIS_ADDR": "localhost:6379",
+        "JWT_SECRET": "test-secret"
+      },
+      "args": [
+        "-test.run",
+        "${input:testName}"
+      ],
+      "showLog": true,
+      "trace": "verbose"
+    },
+    {
+      "name": "Debug Current Package Tests",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${fileDirname}",
+      "env": {
+        "TEST_DATABASE_URL": "postgres://postgres:password@localhost:5432/chatlogger_test?sslmode=disable",
+        "REDIS_ADDR": "localhost:6379",
+        "JWT_SECRET": "test-secret"
+      },
+      "args": [
+        "-test.v"
+      ],
+      "showLog": true
+    },
+    {
+      "name": "Attach to Process",
+      "type": "go",
+      "request": "attach",
+      "mode": "local",
+      "processId": "${command:pickProcess}"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "testName",
+      "description": "Test function name",
+      "default": "",
+      "type": "promptString"
+    }
+  ]
+}
+EOF < /dev/null
