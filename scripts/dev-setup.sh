@@ -88,6 +88,12 @@ install_tools() {
     go install golang.org/x/vuln/cmd/govulncheck@latest
 
     print_success "Development tools installed"
+
+    # Check if Go tools are on PATH
+    TOOLS_BIN="$(go env GOBIN 2>/dev/null || echo "$HOME/go/bin")"
+    if [[ ":$PATH:" != *":$TOOLS_BIN:"* ]]; then
+        print_warning "Add $TOOLS_BIN to your PATH to use installed tools."
+    fi
 }
 
 # Setup environment file
@@ -188,7 +194,6 @@ main() {
 
     # Check prerequisites
     check_go
-    check_docker
 
     # Install tools and setup environment
     install_tools
