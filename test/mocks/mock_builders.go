@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"errors"
+	"time"
 
 	"github.com/kjanat/chatlogger-api-go/internal/domain"
 	"github.com/kjanat/chatlogger-api-go/test/fixtures"
@@ -158,7 +159,7 @@ func NewMockChatServiceBuilder() *MockChatServiceBuilder {
 
 // WithCreateChatReturns configures the CreateChat method mock.
 func (b *MockChatServiceBuilder) WithCreateChatReturns(err error) *MockChatServiceBuilder {
-	b.mock.On("CreateChat", mock.AnythingOfType("*domain.Chat")).Return(err)
+	b.mock.On("CreateChat", mock.Anything, mock.AnythingOfType("*domain.Chat")).Return(err)
 	return b
 }
 
@@ -167,7 +168,7 @@ func (b *MockChatServiceBuilder) WithGetByIDReturns(
 	chat *domain.Chat,
 	err error,
 ) *MockChatServiceBuilder {
-	b.mock.On("GetByID", mock.AnythingOfType("uint64")).Return(chat, err)
+	b.mock.On("GetByID", mock.Anything, mock.AnythingOfType("uint64")).Return(chat, err)
 	return b
 }
 
@@ -176,29 +177,29 @@ func (b *MockChatServiceBuilder) WithGetByOrganizationIDReturns(
 	chats []domain.Chat,
 	err error,
 ) *MockChatServiceBuilder {
-	b.mock.On("GetByOrganizationID", mock.AnythingOfType("uint64"), mock.AnythingOfType("int"), mock.AnythingOfType("int")).
+	b.mock.On("GetByOrganizationID", mock.Anything, mock.AnythingOfType("uint64"), mock.AnythingOfType("int"), mock.AnythingOfType("int")).
 		Return(chats, err)
 	return b
 }
 
 // WithUpdateChatReturns configures the UpdateChat method mock.
 func (b *MockChatServiceBuilder) WithUpdateChatReturns(err error) *MockChatServiceBuilder {
-	b.mock.On("UpdateChat", mock.AnythingOfType("*domain.Chat")).Return(err)
+	b.mock.On("UpdateChat", mock.Anything, mock.AnythingOfType("*domain.Chat")).Return(err)
 	return b
 }
 
 // WithDeleteChatReturns configures the DeleteChat method mock.
 func (b *MockChatServiceBuilder) WithDeleteChatReturns(err error) *MockChatServiceBuilder {
-	b.mock.On("DeleteChat", mock.AnythingOfType("uint64")).Return(err)
+	b.mock.On("DeleteChat", mock.Anything, mock.AnythingOfType("uint64")).Return(err)
 	return b
 }
 
 // WithGetChatStatsReturns configures the GetChatStats method mock.
 func (b *MockChatServiceBuilder) WithGetChatStatsReturns(
-	stats map[string]interface{},
+	stats *domain.ChatStatsResponse,
 	err error,
 ) *MockChatServiceBuilder {
-	b.mock.On("GetChatStats", mock.AnythingOfType("uint64"), mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).
+	b.mock.On("GetChatStats", mock.Anything, mock.AnythingOfType("uint64"), mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).
 		Return(stats, err)
 	return b
 }
@@ -247,7 +248,14 @@ func DefaultChatServiceMock(setup *ServiceTestSetup) *MockChatService {
 		WithGetByOrganizationIDReturns([]domain.Chat{*setup.Chat}, nil).
 		WithUpdateChatReturns(nil).
 		WithDeleteChatReturns(nil).
-		WithGetChatStatsReturns(map[string]interface{}{"count": 1}, nil).
+		WithGetChatStatsReturns(&domain.ChatStatsResponse{
+			TotalChats: 1,
+			TagStats:   map[string]int64{"test": 1},
+			DateRange: domain.ChatStatsDateRange{
+				Start: time.Now().AddDate(0, 0, -7).Format(time.RFC3339),
+				End:   time.Now().Format(time.RFC3339),
+			},
+		}, nil).
 		Build()
 }
 

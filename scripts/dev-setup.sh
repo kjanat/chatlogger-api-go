@@ -3,7 +3,7 @@
 # ChatLogger API - Development Environment Setup Script
 # This script sets up the development environment for new contributors
 
-set -e
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -100,11 +100,11 @@ check_go() {
 # Detect Docker Compose command (new plugin or legacy binary)
 detect_docker_compose() {
     if command_exists docker && docker compose version >/dev/null 2>&1; then
-        echo "docker compose"
+        DOCKER_COMPOSE_CMD=(docker compose)
     elif command_exists docker-compose; then
-        echo "docker-compose"
+        DOCKER_COMPOSE_CMD=(docker-compose)
     else
-        echo ""
+        DOCKER_COMPOSE_CMD=()
     fi
 }
 
@@ -116,13 +116,13 @@ check_docker() {
         return 1
     fi
 
-    DOCKER_COMPOSE_CMD=$(detect_docker_compose)
-    if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+    detect_docker_compose
+    if [ ${#DOCKER_COMPOSE_CMD[@]} -eq 0 ]; then
         print_warning "Docker Compose is not installed. Some features may not work."
         return 1
     fi
 
-    print_success "Docker and Docker Compose ($DOCKER_COMPOSE_CMD) are installed"
+    print_success "Docker and Docker Compose (${DOCKER_COMPOSE_CMD[*]}) are installed"
     return 0
 }
 
@@ -192,8 +192,8 @@ setup_database() {
     fi
 
     # Detect Docker Compose command
-    DOCKER_COMPOSE_CMD=$(detect_docker_compose)
-    if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+    detect_docker_compose
+    if [ ${#DOCKER_COMPOSE_CMD[@]} -eq 0 ]; then
         print_error "Docker Compose not found"
         return 1
     fi
@@ -201,13 +201,13 @@ setup_database() {
     print_status "Setting up development database..."
 
     # Start PostgreSQL and Redis
-    $DOCKER_COMPOSE_CMD up -d postgres redis
+    "${DOCKER_COMPOSE_CMD[@]}" up -d postgres redis
 
     # Wait for PostgreSQL to be ready
     print_status "Waiting for PostgreSQL to be ready..."
     POSTGRES_READY=false
     for attempt in {1..30}; do
-        if $DOCKER_COMPOSE_CMD exec postgres pg_isready -U postgres >/dev/null 2>&1; then
+        if "${DOCKER_COMPOSE_CMD[@]}" exec postgres pg_isready -U postgres >/dev/null 2>&1; then
             POSTGRES_READY=true
             break
         fi
@@ -218,7 +218,7 @@ setup_database() {
     # Fail fast if PostgreSQL never became ready
     if [ "$POSTGRES_READY" = false ]; then
         print_error "PostgreSQL failed to become ready after 30 seconds"
-        print_error "Check Docker containers with: $DOCKER_COMPOSE_CMD logs postgres"
+        print_error "Check Docker containers with: ${DOCKER_COMPOSE_CMD[*]} logs postgres"
         exit 1
     fi
 
@@ -227,9 +227,9 @@ setup_database() {
     # Run migrations
     print_status "Running database migrations..."
     if [ -f migrations/001_initial_schema.sql ]; then
-        $DOCKER_COMPOSE_CMD exec postgres psql -U postgres -d chatlogger -f /docker-entrypoint-initdb.d/001_initial_schema.sql 2>/dev/null || true
-        $DOCKER_COMPOSE_CMD exec postgres psql -U postgres -d chatlogger -f /docker-entrypoint-initdb.d/002_ensure_defaults.sql 2>/dev/null || true
-        $DOCKER_COMPOSE_CMD exec postgres psql -U postgres -d chatlogger -f /docker-entrypoint-initdb.d/003_add_exports_table.sql 2>/dev/null || true
+        "${DOCKER_COMPOSE_CMD[@]}" exec postgres psql -U postgres -d chatlogger -f /docker-entrypoint-initdb.d/001_initial_schema.sql
+        "${DOCKER_COMPOSE_CMD[@]}" exec postgres psql -U postgres -d chatlogger -f /docker-entrypoint-initdb.d/002_ensure_defaults.sql
+        "${DOCKER_COMPOSE_CMD[@]}" exec postgres psql -U postgres -d chatlogger -f /docker-entrypoint-initdb.d/003_add_exports_table.sql
         print_success "Database migrations completed"
     else
         print_warning "Migration files not found, skipping database setup"
