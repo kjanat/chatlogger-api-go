@@ -44,7 +44,7 @@ The API is documented using Swagger/OpenAPI:
 
 ## 🛠️ Tech Stack
 
-- **Language**: [Go 1.24.2+](https://github.com/kjanat/chatlogger-api-go/blob/master/go.mod#L3)
+- **Language**: [Go 1.24.2+](https://github.com/kjanat/chatlogger-api-go/blob/af38ff3217524cae62314ead1a60b9b397504d05/go.mod#L3)
 - **Web Framework**: [Gin][Gin]
 - **ORM**: [GORM][Gorm] with PostgreSQL
 - **Authentication**: JWT using [golang-jwt/jwt][JWT]

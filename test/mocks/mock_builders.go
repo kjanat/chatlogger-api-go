@@ -8,172 +8,207 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockChatRepositoryBuilder provides a fluent interface for building MockChatRepository
+// MockChatRepositoryBuilder provides a fluent interface for building MockChatRepository.
 type MockChatRepositoryBuilder struct {
 	mock *MockChatRepository
 }
 
-// NewMockChatRepositoryBuilder creates a new builder instance
+// NewMockChatRepositoryBuilder creates a new builder instance.
 func NewMockChatRepositoryBuilder() *MockChatRepositoryBuilder {
 	return &MockChatRepositoryBuilder{
 		mock: &MockChatRepository{},
 	}
 }
 
-// WithCreateReturns configures the Create method mock
+// WithCreateReturns configures the Create method mock.
 func (b *MockChatRepositoryBuilder) WithCreateReturns(err error) *MockChatRepositoryBuilder {
 	b.mock.On("Create", mock.AnythingOfType("*domain.Chat")).Return(err)
 	return b
 }
 
-// WithFindByIDReturns configures the FindByID method mock
-func (b *MockChatRepositoryBuilder) WithFindByIDReturns(chat *domain.Chat, err error) *MockChatRepositoryBuilder {
+// WithFindByIDReturns configures the FindByID method mock.
+func (b *MockChatRepositoryBuilder) WithFindByIDReturns(
+	chat *domain.Chat,
+	err error,
+) *MockChatRepositoryBuilder {
 	b.mock.On("FindByID", mock.AnythingOfType("uint64")).Return(chat, err)
 	return b
 }
 
-// WithFindByOrganizationIDReturns configures the FindByOrganizationID method mock
-func (b *MockChatRepositoryBuilder) WithFindByOrganizationIDReturns(chats []domain.Chat, err error) *MockChatRepositoryBuilder {
-	b.mock.On("FindByOrganizationID", mock.AnythingOfType("uint64"), mock.AnythingOfType("int"), mock.AnythingOfType("int")).Return(chats, err)
+// WithFindByOrganizationIDReturns configures the FindByOrganizationID method mock.
+func (b *MockChatRepositoryBuilder) WithFindByOrganizationIDReturns(
+	chats []domain.Chat,
+	err error,
+) *MockChatRepositoryBuilder {
+	b.mock.On("FindByOrganizationID", mock.AnythingOfType("uint64"), mock.AnythingOfType("int"), mock.AnythingOfType("int")).
+		Return(chats, err)
 	return b
 }
 
-// WithUpdateReturns configures the Update method mock
+// WithUpdateReturns configures the Update method mock.
 func (b *MockChatRepositoryBuilder) WithUpdateReturns(err error) *MockChatRepositoryBuilder {
 	b.mock.On("Update", mock.AnythingOfType("*domain.Chat")).Return(err)
 	return b
 }
 
-// WithDeleteReturns configures the Delete method mock
+// WithDeleteReturns configures the Delete method mock.
 func (b *MockChatRepositoryBuilder) WithDeleteReturns(err error) *MockChatRepositoryBuilder {
 	b.mock.On("Delete", mock.AnythingOfType("uint64")).Return(err)
 	return b
 }
 
-// WithCountByOrgIDAndDateRangeReturns configures the CountByOrgIDAndDateRange method mock
-func (b *MockChatRepositoryBuilder) WithCountByOrgIDAndDateRangeReturns(count int64, err error) *MockChatRepositoryBuilder {
-	b.mock.On("CountByOrgIDAndDateRange", mock.AnythingOfType("uint64"), mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(count, err)
+// WithCountByOrgIDAndDateRangeReturns configures the CountByOrgIDAndDateRange method mock.
+func (b *MockChatRepositoryBuilder) WithCountByOrgIDAndDateRangeReturns(
+	count int64,
+	err error,
+) *MockChatRepositoryBuilder {
+	b.mock.On("CountByOrgIDAndDateRange", mock.AnythingOfType("uint64"), mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).
+		Return(count, err)
 	return b
 }
 
-// WithGetTagStatsReturns configures the GetTagStats method mock
-func (b *MockChatRepositoryBuilder) WithGetTagStatsReturns(stats map[string]int64, err error) *MockChatRepositoryBuilder {
+// WithGetTagStatsReturns configures the GetTagStats method mock.
+func (b *MockChatRepositoryBuilder) WithGetTagStatsReturns(
+	stats map[string]int64,
+	err error,
+) *MockChatRepositoryBuilder {
 	b.mock.On("GetTagStats", mock.AnythingOfType("uint64")).Return(stats, err)
 	return b
 }
 
-// Build returns the configured mock
+// Build returns the configured mock.
 func (b *MockChatRepositoryBuilder) Build() *MockChatRepository {
 	return b.mock
 }
 
-// MockUserRepositoryBuilder provides a fluent interface for building MockUserRepository
+// MockUserRepositoryBuilder provides a fluent interface for building MockUserRepository.
 type MockUserRepositoryBuilder struct {
 	mock *MockUserRepository
 }
 
-// NewMockUserRepositoryBuilder creates a new builder instance
+// NewMockUserRepositoryBuilder creates a new builder instance.
 func NewMockUserRepositoryBuilder() *MockUserRepositoryBuilder {
 	return &MockUserRepositoryBuilder{
 		mock: &MockUserRepository{},
 	}
 }
 
-// WithCreateReturns configures the Create method mock
+// WithCreateReturns configures the Create method mock.
 func (b *MockUserRepositoryBuilder) WithCreateReturns(err error) *MockUserRepositoryBuilder {
 	b.mock.On("Create", mock.AnythingOfType("*domain.User")).Return(err)
 	return b
 }
 
-// WithFindByIDReturns configures the FindByID method mock
-func (b *MockUserRepositoryBuilder) WithFindByIDReturns(user *domain.User, err error) *MockUserRepositoryBuilder {
+// WithFindByIDReturns configures the FindByID method mock.
+func (b *MockUserRepositoryBuilder) WithFindByIDReturns(
+	user *domain.User,
+	err error,
+) *MockUserRepositoryBuilder {
 	b.mock.On("FindByID", mock.AnythingOfType("uint64")).Return(user, err)
 	return b
 }
 
-// WithFindByEmailReturns configures the FindByEmail method mock
-func (b *MockUserRepositoryBuilder) WithFindByEmailReturns(user *domain.User, err error) *MockUserRepositoryBuilder {
+// WithFindByEmailReturns configures the FindByEmail method mock.
+func (b *MockUserRepositoryBuilder) WithFindByEmailReturns(
+	user *domain.User,
+	err error,
+) *MockUserRepositoryBuilder {
 	b.mock.On("FindByEmail", mock.AnythingOfType("string")).Return(user, err)
 	return b
 }
 
-// WithFindByOrganizationIDReturns configures the FindByOrganizationID method mock
-func (b *MockUserRepositoryBuilder) WithFindByOrganizationIDReturns(users []domain.User, err error) *MockUserRepositoryBuilder {
-	b.mock.On("FindByOrganizationID", mock.AnythingOfType("uint64"), mock.AnythingOfType("int"), mock.AnythingOfType("int")).Return(users, err)
+// WithFindByOrganizationIDReturns configures the FindByOrganizationID method mock.
+func (b *MockUserRepositoryBuilder) WithFindByOrganizationIDReturns(
+	users []domain.User,
+	err error,
+) *MockUserRepositoryBuilder {
+	b.mock.On("FindByOrganizationID", mock.AnythingOfType("uint64"), mock.AnythingOfType("int"), mock.AnythingOfType("int")).
+		Return(users, err)
 	return b
 }
 
-// WithUpdateReturns configures the Update method mock
+// WithUpdateReturns configures the Update method mock.
 func (b *MockUserRepositoryBuilder) WithUpdateReturns(err error) *MockUserRepositoryBuilder {
 	b.mock.On("Update", mock.AnythingOfType("*domain.User")).Return(err)
 	return b
 }
 
-// WithDeleteReturns configures the Delete method mock
+// WithDeleteReturns configures the Delete method mock.
 func (b *MockUserRepositoryBuilder) WithDeleteReturns(err error) *MockUserRepositoryBuilder {
 	b.mock.On("Delete", mock.AnythingOfType("uint64")).Return(err)
 	return b
 }
 
-// Build returns the configured mock
+// Build returns the configured mock.
 func (b *MockUserRepositoryBuilder) Build() *MockUserRepository {
 	return b.mock
 }
 
-// MockChatServiceBuilder provides a fluent interface for building MockChatService
+// MockChatServiceBuilder provides a fluent interface for building MockChatService.
 type MockChatServiceBuilder struct {
 	mock *MockChatService
 }
 
-// NewMockChatServiceBuilder creates a new builder instance
+// NewMockChatServiceBuilder creates a new builder instance.
 func NewMockChatServiceBuilder() *MockChatServiceBuilder {
 	return &MockChatServiceBuilder{
 		mock: &MockChatService{},
 	}
 }
 
-// WithCreateChatReturns configures the CreateChat method mock
+// WithCreateChatReturns configures the CreateChat method mock.
 func (b *MockChatServiceBuilder) WithCreateChatReturns(err error) *MockChatServiceBuilder {
 	b.mock.On("CreateChat", mock.AnythingOfType("*domain.Chat")).Return(err)
 	return b
 }
 
-// WithGetByIDReturns configures the GetByID method mock
-func (b *MockChatServiceBuilder) WithGetByIDReturns(chat *domain.Chat, err error) *MockChatServiceBuilder {
+// WithGetByIDReturns configures the GetByID method mock.
+func (b *MockChatServiceBuilder) WithGetByIDReturns(
+	chat *domain.Chat,
+	err error,
+) *MockChatServiceBuilder {
 	b.mock.On("GetByID", mock.AnythingOfType("uint64")).Return(chat, err)
 	return b
 }
 
-// WithGetByOrganizationIDReturns configures the GetByOrganizationID method mock
-func (b *MockChatServiceBuilder) WithGetByOrganizationIDReturns(chats []domain.Chat, err error) *MockChatServiceBuilder {
-	b.mock.On("GetByOrganizationID", mock.AnythingOfType("uint64"), mock.AnythingOfType("int"), mock.AnythingOfType("int")).Return(chats, err)
+// WithGetByOrganizationIDReturns configures the GetByOrganizationID method mock.
+func (b *MockChatServiceBuilder) WithGetByOrganizationIDReturns(
+	chats []domain.Chat,
+	err error,
+) *MockChatServiceBuilder {
+	b.mock.On("GetByOrganizationID", mock.AnythingOfType("uint64"), mock.AnythingOfType("int"), mock.AnythingOfType("int")).
+		Return(chats, err)
 	return b
 }
 
-// WithUpdateChatReturns configures the UpdateChat method mock
+// WithUpdateChatReturns configures the UpdateChat method mock.
 func (b *MockChatServiceBuilder) WithUpdateChatReturns(err error) *MockChatServiceBuilder {
 	b.mock.On("UpdateChat", mock.AnythingOfType("*domain.Chat")).Return(err)
 	return b
 }
 
-// WithDeleteChatReturns configures the DeleteChat method mock
+// WithDeleteChatReturns configures the DeleteChat method mock.
 func (b *MockChatServiceBuilder) WithDeleteChatReturns(err error) *MockChatServiceBuilder {
 	b.mock.On("DeleteChat", mock.AnythingOfType("uint64")).Return(err)
 	return b
 }
 
-// WithGetChatStatsReturns configures the GetChatStats method mock
-func (b *MockChatServiceBuilder) WithGetChatStatsReturns(stats map[string]interface{}, err error) *MockChatServiceBuilder {
-	b.mock.On("GetChatStats", mock.AnythingOfType("uint64"), mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(stats, err)
+// WithGetChatStatsReturns configures the GetChatStats method mock.
+func (b *MockChatServiceBuilder) WithGetChatStatsReturns(
+	stats map[string]interface{},
+	err error,
+) *MockChatServiceBuilder {
+	b.mock.On("GetChatStats", mock.AnythingOfType("uint64"), mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).
+		Return(stats, err)
 	return b
 }
 
-// Build returns the configured mock
+// Build returns the configured mock.
 func (b *MockChatServiceBuilder) Build() *MockChatService {
 	return b.mock
 }
 
-// ServiceTestSetup provides a standardized setup for service tests with common test data
+// ServiceTestSetup provides a standardized setup for service tests with common test data.
 type ServiceTestSetup struct {
 	Org     *domain.Organization
 	User    *domain.User
@@ -181,7 +216,7 @@ type ServiceTestSetup struct {
 	Message *domain.Message
 }
 
-// NewServiceTestSetup creates standard test data for service tests
+// NewServiceTestSetup creates standard test data for service tests.
 func NewServiceTestSetup() *ServiceTestSetup {
 	org := fixtures.CreateTestOrganization()
 	org.ID = 1
@@ -204,7 +239,7 @@ func NewServiceTestSetup() *ServiceTestSetup {
 	}
 }
 
-// DefaultChatServiceMock creates a chat service mock with common successful responses
+// DefaultChatServiceMock creates a chat service mock with common successful responses.
 func DefaultChatServiceMock(setup *ServiceTestSetup) *MockChatService {
 	return NewMockChatServiceBuilder().
 		WithCreateChatReturns(nil).
@@ -216,7 +251,7 @@ func DefaultChatServiceMock(setup *ServiceTestSetup) *MockChatService {
 		Build()
 }
 
-// DefaultChatRepositoryMock creates a chat repository mock with common successful responses
+// DefaultChatRepositoryMock creates a chat repository mock with common successful responses.
 func DefaultChatRepositoryMock(setup *ServiceTestSetup) *MockChatRepository {
 	return NewMockChatRepositoryBuilder().
 		WithCreateReturns(nil).
@@ -229,7 +264,7 @@ func DefaultChatRepositoryMock(setup *ServiceTestSetup) *MockChatRepository {
 		Build()
 }
 
-// DefaultUserRepositoryMock creates a user repository mock with common successful responses
+// DefaultUserRepositoryMock creates a user repository mock with common successful responses.
 func DefaultUserRepositoryMock(setup *ServiceTestSetup) *MockUserRepository {
 	return NewMockUserRepositoryBuilder().
 		WithCreateReturns(nil).
@@ -241,38 +276,38 @@ func DefaultUserRepositoryMock(setup *ServiceTestSetup) *MockUserRepository {
 		Build()
 }
 
-// ScenarioBuilder provides methods for creating common test scenarios
+// ScenarioBuilder provides methods for creating common test scenarios.
 type ScenarioBuilder struct {
 	setup *ServiceTestSetup
 }
 
-// NewScenarioBuilder creates a new scenario builder
+// NewScenarioBuilder creates a new scenario builder.
 func NewScenarioBuilder() *ScenarioBuilder {
 	return &ScenarioBuilder{
 		setup: NewServiceTestSetup(),
 	}
 }
 
-// GetSetup returns the test setup data
+// GetSetup returns the test setup data.
 func (s *ScenarioBuilder) GetSetup() *ServiceTestSetup {
 	return s.setup
 }
 
-// ChatNotFoundScenario creates mocks for a chat not found scenario
+// ChatNotFoundScenario creates mocks for a chat not found scenario.
 func (s *ScenarioBuilder) ChatNotFoundScenario() *MockChatRepository {
 	return NewMockChatRepositoryBuilder().
 		WithFindByIDReturns(nil, nil).
 		Build()
 }
 
-// UserNotFoundScenario creates mocks for a user not found scenario
+// UserNotFoundScenario creates mocks for a user not found scenario.
 func (s *ScenarioBuilder) UserNotFoundScenario() *MockUserRepository {
 	return NewMockUserRepositoryBuilder().
 		WithFindByEmailReturns(nil, nil).
 		Build()
 }
 
-// DatabaseErrorScenario creates mocks that return database errors
+// DatabaseErrorScenario creates mocks that return database errors.
 func (s *ScenarioBuilder) DatabaseErrorScenario() (*MockChatRepository, *MockUserRepository) {
 	dbErr := errors.New("database error")
 

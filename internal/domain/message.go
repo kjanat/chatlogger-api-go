@@ -3,6 +3,7 @@ package domain
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -53,7 +54,10 @@ func (m *Message) GetMetadata() (*MessageMetadata, error) {
 		return &metadata, nil // Return empty struct if no metadata
 	}
 	err := json.Unmarshal([]byte(m.Metadata), &metadata)
-	return &metadata, err
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal message metadata: %w", err)
+	}
+	return &metadata, nil
 }
 
 // SetMetadata converts the MessageMetadata struct into a JSON string.
@@ -64,7 +68,7 @@ func (m *Message) SetMetadata(metadata *MessageMetadata) error {
 	}
 	metadataJSON, err := json.Marshal(metadata)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal message metadata: %w", err)
 	}
 	m.Metadata = string(metadataJSON)
 	return nil
@@ -78,7 +82,6 @@ func (m *Message) Validate() error {
 
 	if m.Content == "" {
 		return errors.New("message content cannot be empty")
-
 	}
 
 	return nil

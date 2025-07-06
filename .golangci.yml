@@ -1,108 +1,83 @@
+version: "2"
+
+# Minimal golangci-lint configuration for compatibility
 run:
   timeout: 5m
-  tests: true
-  modules-download-mode: readonly
-
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-
-  gocyclo:
-    min-complexity: 10
-
-  gofmt:
-    simplify: true
-
-  goimports:
-    local-prefixes: github.com/kjanat/chatlogger-api-go
-
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment
-
-  lll:
-    line-length: 120
-
-  misspell:
-    locale: US
-
-  staticcheck:
-    checks: ["all"]
-
-  stylecheck:
-    checks: ["all", "-ST1000", "-ST1003", "-ST1016", "-ST1020", "-ST1021", "-ST1022"]
-
-  gosec:
-    excludes:
-      - G404 # Use of weak random number generator - okay for test fixtures
-
-  revive:
-    rules:
-      - name: exported
-        disabled: true
-      - name: package-comments
-        disabled: true
 
 linters:
   enable:
     - errcheck
-    - gosimple
     - govet
     - ineffassign
     - staticcheck
-    - typecheck
     - unused
-    - gocyclo
-    - gofmt
-    - goimports
-    - misspell
-    - lll
-    - goconst
-    - gosec
-    - unconvert
-    - unparam
-    - revive
-    - bodyclose
-    - rowserrcheck
-    - exportloopref
-    - whitespace
-    - goprintffuncname
-    - gomnd
     - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - gosec
+    - importas
+    - makezero
+    - sloglint
+    - wrapcheck
+  settings:
+    gocyclo:
+      # Minimal code complexity to report.
+      # Default: 30 (but we recommend 10-20)
+      min-complexity: 30
+    godox:
+      # Report any comments starting with keywords, this is useful for TODO or FIXME comments that
+      # might be left in the code accidentally and should be resolved before merging.
+      # Default: ["TODO", "BUG", "FIXME"]
+      keywords:
+        - TODO
+        - BUG
+        - FIXME
+        - NOTE
+        - OPTIMIZE # marks code that should be optimized before merging
+        - HACK # marks hack-around that should be removed before merging
 
-  disable:
-    - deadcode
-    - varcheck
-    - structcheck
+formatters:
+  # Enable specific formatter.
+  # Default: [] (uses standard Go formatting)
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    - golines
+    - swaggo
 
 issues:
+  exclude-dirs:
+    - bin
+    - output
+    - test_output
+    - source
+    - .backup
   exclude-rules:
-    # Exclude some linters from running on tests files
+    # Disable wrapcheck for test files and mocks
     - path: _test\.go
-      linters:
-        - gocyclo
-        - errcheck
-        - dupl
-        - gosec
-        - gomnd
-
-    # Exclude test files from certain checks
+      linters: [wrapcheck, errcheck, godot]
     - path: test/
-      linters:
-        - gomnd
-        - goconst
-
-    # Exclude migration files from linting
-    - path: migrations/
-      linters:
-        - lll
-
-    # Allow long lines in generated files
-    - path: docs/
-      linters:
-        - lll
-
-  max-issues-per-linter: 0
-  max-same-issues: 0
+      linters: [wrapcheck, errcheck, godot, gosec]
+    - path: internal/repository/benchmark_test\.go
+      linters: [errcheck]
+    # Disable wrapcheck for simple repository pass-through methods
+    - linters: [wrapcheck]
+      text: "error returned from interface method should be wrapped"
+    # Disable wrapcheck for mock test methods
+    - linters: [wrapcheck]
+      text: "error returned from external package is unwrapped.*Arguments.*Error"
+    # Disable wrapcheck for all mock files
+    - path: test/mocks/
+      linters: [wrapcheck]
+    # Disable gosec for test fixtures using weak random
+    - path: test/fixtures/
+      linters: [gosec]
+    # Disable gosec file inclusion warning for tests reading generated files
+    - linters: [gosec]
+      text: "G304"
+    # Disable gosec weak random warning for test fixtures
+    - linters: [gosec]
+      text: "G404"

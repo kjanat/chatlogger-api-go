@@ -10,28 +10,28 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-// Task types
+// Task types.
 const (
 	TypeExportProcess = "export:process"
 )
 
-// ExportPayload contains the data needed for export processing
+// ExportPayload contains the data needed for export processing.
 type ExportPayload struct {
 	ExportID uint64 `json:"export_id"`
 }
 
-// Queue handles job queueing operations
+// Queue handles job queueing operations.
 type Queue struct {
 	client *asynq.Client
 }
 
-// NewQueue creates a new job queue
+// NewQueue creates a new job queue.
 func NewQueue(redisAddr string) *Queue {
 	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr})
 	return &Queue{client: client}
 }
 
-// EnqueueExport adds an export job to the queue
+// EnqueueExport adds an export job to the queue.
 func (q *Queue) EnqueueExport(exportID uint64) error {
 	payload, err := json.Marshal(ExportPayload{ExportID: exportID})
 	if err != nil {
@@ -48,10 +48,17 @@ func (q *Queue) EnqueueExport(exportID uint64) error {
 	}
 
 	_, err = q.client.Enqueue(task, opts...)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to enqueue export task: %w", err)
+	}
+	return nil
 }
 
-// Close closes the queue client connection
+// Close closes the queue client connection.
 func (q *Queue) Close() error {
-	return q.client.Close()
+	err := q.client.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close queue client: %w", err)
+	}
+	return nil
 }

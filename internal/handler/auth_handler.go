@@ -4,9 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kjanat/chatlogger-api-go/internal/domain"
-
 	"github.com/gin-gonic/gin"
+	"github.com/kjanat/chatlogger-api-go/internal/domain"
 )
 
 // AuthHandler handles authentication-related requests.

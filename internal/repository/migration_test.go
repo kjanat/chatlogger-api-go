@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// TestDatabaseMigrations tests that the database migrations work correctly
+// TestDatabaseMigrations tests that the database migrations work correctly.
 func TestDatabaseMigrations(t *testing.T) {
 	// Skip if no PostgreSQL available (migrations are PostgreSQL-specific)
 	testDBURL := os.Getenv("TEST_DATABASE_URL")
@@ -27,7 +27,7 @@ func TestDatabaseMigrations(t *testing.T) {
 
 	sqlDB, err := db.DB()
 	require.NoError(t, err)
-	defer sqlDB.Close()
+	defer func() { _ = sqlDB.Close() }()
 
 	t.Run("Initial Schema Migration", func(t *testing.T) {
 		// Apply initial schema migration
@@ -46,8 +46,8 @@ func TestDatabaseMigrations(t *testing.T) {
 			var exists bool
 			err := db.Raw(`
 				SELECT EXISTS (
-					SELECT FROM information_schema.tables 
-					WHERE table_schema = 'public' 
+					SELECT FROM information_schema.tables
+					WHERE table_schema = 'public'
 					AND table_name = ?
 				)
 			`, table).Scan(&exists).Error
@@ -66,8 +66,8 @@ func TestDatabaseMigrations(t *testing.T) {
 			var exists bool
 			err := db.Raw(`
 				SELECT EXISTS (
-					SELECT FROM pg_indexes 
-					WHERE schemaname = 'public' 
+					SELECT FROM pg_indexes
+					WHERE schemaname = 'public'
 					AND indexname = ?
 				)
 			`, index).Scan(&exists).Error
@@ -89,8 +89,8 @@ func TestDatabaseMigrations(t *testing.T) {
 		var exists bool
 		err = db.Raw(`
 			SELECT EXISTS (
-				SELECT FROM information_schema.tables 
-				WHERE table_schema = 'public' 
+				SELECT FROM information_schema.tables
+				WHERE table_schema = 'public'
 				AND table_name = 'exports'
 			)
 		`).Scan(&exists).Error
@@ -116,15 +116,22 @@ func TestDatabaseMigrations(t *testing.T) {
 		for column, expectedType := range expectedColumns {
 			var dataType string
 			err := db.Raw(`
-				SELECT data_type 
-				FROM information_schema.columns 
-				WHERE table_schema = 'public' 
-				AND table_name = 'exports' 
+				SELECT data_type
+				FROM information_schema.columns
+				WHERE table_schema = 'public'
+				AND table_name = 'exports'
 				AND column_name = ?
 			`, column).Scan(&dataType).Error
 
 			require.NoError(t, err)
-			assert.Equal(t, expectedType, dataType, "Column %s should have type %s", column, expectedType)
+			assert.Equal(
+				t,
+				expectedType,
+				dataType,
+				"Column %s should have type %s",
+				column,
+				expectedType,
+			)
 		}
 
 		// Verify foreign key constraints exist
@@ -137,8 +144,8 @@ func TestDatabaseMigrations(t *testing.T) {
 			var exists bool
 			err := db.Raw(`
 				SELECT EXISTS (
-					SELECT 1 FROM information_schema.table_constraints 
-					WHERE constraint_schema = 'public' 
+					SELECT 1 FROM information_schema.table_constraints
+					WHERE constraint_schema = 'public'
 					AND constraint_name = ?
 					AND constraint_type = 'FOREIGN KEY'
 				)
@@ -152,8 +159,8 @@ func TestDatabaseMigrations(t *testing.T) {
 		var triggerExists bool
 		err = db.Raw(`
 			SELECT EXISTS (
-				SELECT 1 FROM information_schema.routines 
-				WHERE routine_schema = 'public' 
+				SELECT 1 FROM information_schema.routines
+				WHERE routine_schema = 'public'
 				AND routine_name = 'update_exports_updated_at'
 			)
 		`).Scan(&triggerExists).Error
@@ -168,8 +175,8 @@ func TestDatabaseMigrations(t *testing.T) {
 		// Insert organization
 		var orgID int64
 		err := db.Raw(`
-			INSERT INTO organizations (name, slug, settings) 
-			VALUES ('Test Org', 'test-org', '{}') 
+			INSERT INTO organizations (name, slug, settings)
+			VALUES ('Test Org', 'test-org', '{}')
 			RETURNING id
 		`).Scan(&orgID).Error
 		require.NoError(t, err)
@@ -178,8 +185,8 @@ func TestDatabaseMigrations(t *testing.T) {
 		// Insert user
 		var userID int64
 		err = db.Raw(`
-			INSERT INTO users (email, password_hash, role, organization_id, first_name, last_name) 
-			VALUES ('test@example.com', 'hashed', 'user', ?, 'Test', 'User') 
+			INSERT INTO users (email, password_hash, role, organization_id, first_name, last_name)
+			VALUES ('test@example.com', 'hashed', 'user', ?, 'Test', 'User')
 			RETURNING id
 		`, orgID).Scan(&userID).Error
 		require.NoError(t, err)
@@ -188,8 +195,8 @@ func TestDatabaseMigrations(t *testing.T) {
 		// Insert chat
 		var chatID int64
 		err = db.Raw(`
-			INSERT INTO chats (organization_id, user_id, title, tags, metadata) 
-			VALUES (?, ?, 'Test Chat', '[]', '{}') 
+			INSERT INTO chats (organization_id, user_id, title, tags, metadata)
+			VALUES (?, ?, 'Test Chat', '[]', '{}')
 			RETURNING id
 		`, orgID, userID).Scan(&chatID).Error
 		require.NoError(t, err)
@@ -198,8 +205,8 @@ func TestDatabaseMigrations(t *testing.T) {
 		// Insert message
 		var messageID int64
 		err = db.Raw(`
-			INSERT INTO messages (chat_id, role, content, metadata) 
-			VALUES (?, 'user', 'Test message', '{}') 
+			INSERT INTO messages (chat_id, role, content, metadata)
+			VALUES (?, 'user', 'Test message', '{}')
 			RETURNING id
 		`, chatID).Scan(&messageID).Error
 		require.NoError(t, err)
@@ -208,8 +215,8 @@ func TestDatabaseMigrations(t *testing.T) {
 		// Insert export
 		var exportID int64
 		err = db.Raw(`
-			INSERT INTO exports (organization_id, user_id, format, type, status) 
-			VALUES (?, ?, 'json', 'all', 'pending') 
+			INSERT INTO exports (organization_id, user_id, format, type, status)
+			VALUES (?, ?, 'json', 'all', 'pending')
 			RETURNING id
 		`, orgID, userID).Scan(&exportID).Error
 		require.NoError(t, err)
@@ -221,28 +228,28 @@ func TestDatabaseMigrations(t *testing.T) {
 
 		// Should fail: Invalid organization_id in users table
 		err := db.Exec(`
-			INSERT INTO users (email, password_hash, role, organization_id) 
+			INSERT INTO users (email, password_hash, role, organization_id)
 			VALUES ('invalid@example.com', 'hash', 'user', 99999)
 		`).Error
 		assert.Error(t, err, "Should fail with invalid organization_id")
 
 		// Should fail: Invalid role in users table
 		err = db.Exec(`
-			INSERT INTO users (email, password_hash, role, organization_id) 
+			INSERT INTO users (email, password_hash, role, organization_id)
 			VALUES ('invalid@example.com', 'hash', 'invalid_role', 1)
 		`).Error
 		assert.Error(t, err, "Should fail with invalid role")
 
 		// Should fail: Invalid role in messages table
 		err = db.Exec(`
-			INSERT INTO messages (chat_id, role, content) 
+			INSERT INTO messages (chat_id, role, content)
 			VALUES (1, 'invalid_role', 'content')
 		`).Error
 		assert.Error(t, err, "Should fail with invalid message role")
 	})
 }
 
-// TestMigrationRollback tests that migrations can be properly rolled back
+// TestMigrationRollback tests that migrations can be properly rolled back.
 func TestMigrationRollback(t *testing.T) {
 	testDBURL := os.Getenv("TEST_DATABASE_URL")
 	if testDBURL == "" {
@@ -256,7 +263,7 @@ func TestMigrationRollback(t *testing.T) {
 
 	sqlDB, err := db.DB()
 	require.NoError(t, err)
-	defer sqlDB.Close()
+	defer func() { _ = sqlDB.Close() }()
 
 	// Drop all tables (simulating rollback)
 	tables := []string{"exports", "messages", "chats", "api_keys", "users", "organizations"}
@@ -270,8 +277,8 @@ func TestMigrationRollback(t *testing.T) {
 		var exists bool
 		err := db.Raw(`
 			SELECT EXISTS (
-				SELECT FROM information_schema.tables 
-				WHERE table_schema = 'public' 
+				SELECT FROM information_schema.tables
+				WHERE table_schema = 'public'
 				AND table_name = ?
 			)
 		`, table).Scan(&exists).Error
@@ -281,7 +288,7 @@ func TestMigrationRollback(t *testing.T) {
 	}
 }
 
-// TestMigrationPerformance tests that migrations complete within reasonable time
+// TestMigrationPerformance tests that migrations complete within reasonable time.
 func TestMigrationPerformance(t *testing.T) {
 	testDBURL := os.Getenv("TEST_DATABASE_URL")
 	if testDBURL == "" {
@@ -295,7 +302,7 @@ func TestMigrationPerformance(t *testing.T) {
 
 	sqlDB, err := db.DB()
 	require.NoError(t, err)
-	defer sqlDB.Close()
+	defer func() { _ = sqlDB.Close() }()
 
 	// Test migration with larger dataset
 	t.Run("Migration with data", func(t *testing.T) {
@@ -309,7 +316,7 @@ func TestMigrationPerformance(t *testing.T) {
 		// Insert test data
 		for i := 0; i < 100; i++ {
 			err := db.Exec(`
-				INSERT INTO organizations (name, slug) 
+				INSERT INTO organizations (name, slug)
 				VALUES (?, ?)
 			`, "Org "+string(rune(i)), "org-"+string(rune(i))).Error
 			require.NoError(t, err)

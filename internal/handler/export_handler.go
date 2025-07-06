@@ -11,11 +11,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/kjanat/chatlogger-api-go/internal/domain"
 	"github.com/kjanat/chatlogger-api-go/internal/middleware"
 	"github.com/kjanat/chatlogger-api-go/internal/strategy"
-
-	"github.com/gin-gonic/gin"
 )
 
 // ExportHandler handles export-related requests.
@@ -43,7 +42,7 @@ func NewExportHandler(
 
 // ExportRequest represents the request to export data.
 type ExportRequest struct {
-	Format string `binding:"required,oneof=json csv" json:"format"`
+	Format string `binding:"required,oneof=json csv"           json:"format"`
 	Type   string `binding:"required,oneof=chats messages all" json:"type"`
 }
 
@@ -114,9 +113,11 @@ func (h *ExportHandler) CreateExport(c *gin.Context) {
 		format,
 		exportType,
 	)
-
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create export: " + err.Error()})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to create export: " + err.Error()},
+		)
 		return
 	}
 
@@ -321,7 +322,10 @@ func (h *ExportHandler) SyncExport(c *gin.Context) {
 		for i := range chats {
 			messages, err := h.messageService.GetByChatID(chats[i].ID)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve messages"})
+				c.JSON(
+					http.StatusInternalServerError,
+					gin.H{"error": "Failed to retrieve messages"},
+				)
 				return
 			}
 			chats[i].Messages = messages
@@ -351,7 +355,10 @@ func (h *ExportHandler) SyncExport(c *gin.Context) {
 	// Export the data
 	exportData, err := exporter.Export(data)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to export data: " + err.Error()})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to export data: " + err.Error()},
+		)
 		return
 	}
 

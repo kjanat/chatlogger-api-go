@@ -49,12 +49,12 @@
     "apiVersion": 2,
     "showGlobalVariables": true
   },
-  
+
   "files.eol": "\n",
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
   "files.trimTrailingWhitespace": true,
-  
+
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
@@ -63,7 +63,7 @@
   "editor.tabSize": 4,
   "editor.insertSpaces": false,
   "editor.detectIndentation": false,
-  
+
   "files.associations": {
     "*.mod": "go",
     "*.sum": "text",
@@ -71,7 +71,7 @@
     "*.yml": "yaml",
     "*.yaml": "yaml"
   },
-  
+
   "files.exclude": {
     "**/bin": true,
     "**/coverage.txt": true,
@@ -79,14 +79,14 @@
     "**/.env.local": true,
     "**/.env.*.local": true
   },
-  
+
   "search.exclude": {
     "**/bin": true,
     "**/vendor": true,
     "**/coverage.txt": true,
     "**/*.log": true
   },
-  
+
   "yaml.schemas": {
     "https://json.schemastore.org/github-workflow.json": [
       ".github/workflows/*.yml",
@@ -97,7 +97,7 @@
       "docker-compose*.yaml"
     ]
   },
-  
+
   "json.schemas": [
     {
       "fileMatch": [

@@ -16,26 +16,26 @@ import (
 // - Always include descriptive error messages for better debugging
 
 // SetupError handles errors that occur during test setup
-// Uses require.NoError to fail fast if setup fails
+// Uses require.NoError to fail fast if setup fails.
 func SetupError(t testing.TB, err error, operation string) {
 	t.Helper()
 	require.NoError(t, err, "Setup failed: %s", operation)
 }
 
 // TestError handles errors in the main test operations
-// Uses assert.NoError to allow other assertions to run
+// Uses assert.NoError to allow other assertions to run.
 func TestError(t testing.TB, err error, operation string) {
 	t.Helper()
 	assert.NoError(t, err, "Test operation failed: %s", operation)
 }
 
-// ExpectError verifies that an error occurred as expected
+// ExpectError verifies that an error occurred as expected.
 func ExpectError(t testing.TB, err error, operation string) {
 	t.Helper()
 	assert.Error(t, err, "Expected error for operation: %s", operation)
 }
 
-// ExpectErrorWithMessage verifies error occurred and checks the error message
+// ExpectErrorWithMessage verifies error occurred and checks the error message.
 func ExpectErrorWithMessage(t testing.TB, err error, expectedMessage, operation string) {
 	t.Helper()
 	if assert.Error(t, err, "Expected error for operation: %s", operation) {
@@ -44,18 +44,25 @@ func ExpectErrorWithMessage(t testing.TB, err error, expectedMessage, operation 
 	}
 }
 
-// ExpectErrorType verifies that a specific type of error occurred
+// ExpectErrorType verifies that a specific type of error occurred.
 func ExpectErrorType(t testing.TB, err error, errorType string, operation string) {
 	t.Helper()
 	if assert.Error(t, err, "Expected %s error for operation: %s", errorType, operation) {
 		errorMsg := strings.ToLower(err.Error())
 		errorTypeCheck := strings.ToLower(errorType)
-		assert.Contains(t, errorMsg, errorTypeCheck,
-			"Error should be of type '%s' for operation: %s. Got: %s", errorType, operation, err.Error())
+		assert.Contains(
+			t,
+			errorMsg,
+			errorTypeCheck,
+			"Error should be of type '%s' for operation: %s. Got: %s",
+			errorType,
+			operation,
+			err.Error(),
+		)
 	}
 }
 
-// DatabaseError handles database operation errors with context
+// DatabaseError handles database operation errors with context.
 func DatabaseError(t testing.TB, err error, operation, tableName string) {
 	t.Helper()
 	if err != nil {
@@ -63,19 +70,19 @@ func DatabaseError(t testing.TB, err error, operation, tableName string) {
 	}
 }
 
-// ServiceError handles service layer errors with context
+// ServiceError handles service layer errors with context.
 func ServiceError(t testing.TB, err error, serviceName, method string) {
 	t.Helper()
 	assert.NoError(t, err, "Service %s.%s failed", serviceName, method)
 }
 
-// RepositoryError handles repository layer errors with context
+// RepositoryError handles repository layer errors with context.
 func RepositoryError(t testing.TB, err error, repoName, method string) {
 	t.Helper()
 	assert.NoError(t, err, "Repository %s.%s failed", repoName, method)
 }
 
-// ValidationError expects a validation error with specific field
+// ValidationError expects a validation error with specific field.
 func ValidationError(t testing.TB, err error, fieldName string) {
 	t.Helper()
 	if assert.Error(t, err, "Expected validation error for field: %s", fieldName) {
@@ -86,7 +93,7 @@ func ValidationError(t testing.TB, err error, fieldName string) {
 	}
 }
 
-// AuthenticationError expects an authentication-related error
+// AuthenticationError expects an authentication-related error.
 func AuthenticationError(t testing.TB, err error, context string) {
 	t.Helper()
 	if assert.Error(t, err, "Expected authentication error for: %s", context) {
@@ -106,7 +113,7 @@ func AuthenticationError(t testing.TB, err error, context string) {
 	}
 }
 
-// NotFoundError expects a "not found" error
+// NotFoundError expects a "not found" error.
 func NotFoundError(t testing.TB, err error, entityType, identifier string) {
 	t.Helper()
 	if assert.Error(t, err, "Expected not found error for %s: %s", entityType, identifier) {
@@ -116,31 +123,31 @@ func NotFoundError(t testing.TB, err error, entityType, identifier string) {
 	}
 }
 
-// ErrorChain helps test error chains and wrapped errors
+// ErrorChain helps test error chains and wrapped errors.
 type ErrorChain struct {
 	t testing.TB
 }
 
-// NewErrorChain creates a new error chain tester
+// NewErrorChain creates a new error chain tester.
 func NewErrorChain(t testing.TB) *ErrorChain {
 	return &ErrorChain{t: t}
 }
 
-// HasError checks if an error occurred
+// HasError checks if an error occurred.
 func (ec *ErrorChain) HasError(err error, operation string) *ErrorChain {
 	ec.t.Helper()
 	assert.Error(ec.t, err, "Expected error for operation: %s", operation)
 	return ec
 }
 
-// NoError checks if no error occurred
+// NoError checks if no error occurred.
 func (ec *ErrorChain) NoError(err error, operation string) *ErrorChain {
 	ec.t.Helper()
 	assert.NoError(ec.t, err, "Unexpected error for operation: %s", operation)
 	return ec
 }
 
-// Contains checks if error message contains specific text
+// Contains checks if error message contains specific text.
 func (ec *ErrorChain) Contains(err error, text string) *ErrorChain {
 	ec.t.Helper()
 	if err != nil {
@@ -149,7 +156,7 @@ func (ec *ErrorChain) Contains(err error, text string) *ErrorChain {
 	return ec
 }
 
-// Equals checks if error message equals specific text
+// Equals checks if error message equals specific text.
 func (ec *ErrorChain) Equals(err error, expectedError error) *ErrorChain {
 	ec.t.Helper()
 	if expectedError != nil && err != nil {
@@ -160,7 +167,7 @@ func (ec *ErrorChain) Equals(err error, expectedError error) *ErrorChain {
 	return ec
 }
 
-// TestScenario helps organize error testing scenarios
+// TestScenario helps organize error testing scenarios.
 type TestScenario struct {
 	Name        string
 	Setup       func() error
@@ -168,7 +175,7 @@ type TestScenario struct {
 	Expectation func(testing.TB, error)
 }
 
-// RunErrorScenarios runs multiple error test scenarios
+// RunErrorScenarios runs multiple error test scenarios.
 func RunErrorScenarios(t *testing.T, scenarios []TestScenario) {
 	t.Helper()
 
@@ -189,24 +196,24 @@ func RunErrorScenarios(t *testing.T, scenarios []TestScenario) {
 	}
 }
 
-// Common error patterns for reuse
+// Common error patterns for reuse.
 var (
-	// ExpectNoError is a common expectation function
+	// ExpectNoError is a common expectation function.
 	ExpectNoError = func(t testing.TB, err error) {
 		assert.NoError(t, err, "Expected no error")
 	}
 
-	// ExpectAnyError is a common expectation function
+	// ExpectAnyError is a common expectation function.
 	ExpectAnyError = func(t testing.TB, err error) {
 		assert.Error(t, err, "Expected an error")
 	}
 
-	// ExpectValidationError is a common expectation function
+	// ExpectValidationError is a common expectation function.
 	ExpectValidationError = func(t testing.TB, err error) {
 		ValidationError(t, err, "validation")
 	}
 
-	// ExpectNotFoundError is a common expectation function
+	// ExpectNotFoundError is a common expectation function.
 	ExpectNotFoundError = func(t testing.TB, err error) {
 		NotFoundError(t, err, "resource", "unknown")
 	}

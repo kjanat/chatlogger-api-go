@@ -20,7 +20,11 @@ func TestExportProcessor_ProcessExport_Success(t *testing.T) {
 	// Create temporary directory for exports
 	tempDir, err := os.MkdirTemp("", "export_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			t.Logf("Warning: failed to cleanup temp directory %s: %v", tempDir, err)
+		}
+	}()
 
 	// Setup mocks
 	mockExportRepo := &mocks.MockExportRepository{}
@@ -81,7 +85,7 @@ func TestExportProcessor_ProcessExport_Success(t *testing.T) {
 
 	// Verify file contents
 	filePath := filepath.Join(tempDir, files[0].Name())
-	fileData, err := os.ReadFile(filePath)
+	fileData, err := os.ReadFile(filePath) //nolint:gosec // Test code reading known test files
 	require.NoError(t, err)
 
 	var exportData map[string]interface{}
@@ -101,7 +105,11 @@ func TestExportProcessor_ProcessExport_Success(t *testing.T) {
 func TestExportProcessor_ProcessExport_InvalidPayload(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "export_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			t.Logf("Warning: failed to cleanup temp directory %s: %v", tempDir, err)
+		}
+	}()
 
 	mockExportRepo := &mocks.MockExportRepository{}
 	mockChatService := &mocks.MockChatService{}
@@ -126,7 +134,11 @@ func TestExportProcessor_ProcessExport_InvalidPayload(t *testing.T) {
 func TestExportProcessor_ProcessExport_ExportNotFound(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "export_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			t.Logf("Warning: failed to cleanup temp directory %s: %v", tempDir, err)
+		}
+	}()
 
 	mockExportRepo := &mocks.MockExportRepository{}
 	mockChatService := &mocks.MockChatService{}
@@ -159,7 +171,11 @@ func TestExportProcessor_ProcessExport_ExportNotFound(t *testing.T) {
 func TestExportProcessor_ProcessExport_ChatServiceError(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "export_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			t.Logf("Warning: failed to cleanup temp directory %s: %v", tempDir, err)
+		}
+	}()
 
 	mockExportRepo := &mocks.MockExportRepository{}
 	mockChatService := &mocks.MockChatService{}
@@ -178,8 +194,10 @@ func TestExportProcessor_ProcessExport_ChatServiceError(t *testing.T) {
 
 	mockExportRepo.On("GetByID", uint64(1)).Return(export, nil)
 	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusProcessing, "").Return(nil)
-	mockChatService.On("GetByOrganizationID", uint64(100), 1000, 0).Return([]domain.Chat(nil), assert.AnError)
-	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusFailed, mock.AnythingOfType("string")).Return(nil)
+	mockChatService.On("GetByOrganizationID", uint64(100), 1000, 0).
+		Return([]domain.Chat(nil), assert.AnError)
+	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusFailed, mock.AnythingOfType("string")).
+		Return(nil)
 
 	payload := ExportPayload{ExportID: 1}
 	payloadBytes, err := json.Marshal(payload)
@@ -199,7 +217,11 @@ func TestExportProcessor_ProcessExport_ChatServiceError(t *testing.T) {
 func TestExportProcessor_ProcessExport_UnsupportedFormat(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "export_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			t.Logf("Warning: failed to cleanup temp directory %s: %v", tempDir, err)
+		}
+	}()
 
 	mockExportRepo := &mocks.MockExportRepository{}
 	mockChatService := &mocks.MockChatService{}
@@ -225,8 +247,10 @@ func TestExportProcessor_ProcessExport_UnsupportedFormat(t *testing.T) {
 	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusProcessing, "").Return(nil)
 	mockChatService.On("GetByOrganizationID", uint64(100), 1000, 0).Return(chats, nil)
 	// Add message service call since processor will try to load messages for each chat
-	mockMessageService.On("GetByChatID", mock.AnythingOfType("uint64")).Return([]domain.Message{}, nil)
-	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusFailed, "unsupported export format").Return(nil)
+	mockMessageService.On("GetByChatID", mock.AnythingOfType("uint64")).
+		Return([]domain.Message{}, nil)
+	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusFailed, "unsupported export format").
+		Return(nil)
 
 	payload := ExportPayload{ExportID: 1}
 	payloadBytes, err := json.Marshal(payload)
@@ -246,7 +270,11 @@ func TestExportProcessor_ProcessExport_UnsupportedFormat(t *testing.T) {
 func TestExportProcessor_ProcessExport_CSVFormat(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "export_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			t.Logf("Warning: failed to cleanup temp directory %s: %v", tempDir, err)
+		}
+	}()
 
 	mockExportRepo := &mocks.MockExportRepository{}
 	mockChatService := &mocks.MockChatService{}
@@ -301,8 +329,14 @@ func TestExportProcessor_ProcessExport_DirectoryCreationError(t *testing.T) {
 	// Use an invalid directory path (e.g., a file as directory)
 	tempFile, err := os.CreateTemp("", "not_a_dir")
 	require.NoError(t, err)
-	defer os.Remove(tempFile.Name())
-	tempFile.Close()
+	defer func() {
+		if err := os.Remove(tempFile.Name()); err != nil {
+			t.Logf("Warning: failed to cleanup temp file %s: %v", tempFile.Name(), err)
+		}
+	}()
+	if err := tempFile.Close(); err != nil {
+		t.Logf("Warning: failed to close temp file: %v", err)
+	}
 
 	mockExportRepo := &mocks.MockExportRepository{}
 	mockChatService := &mocks.MockChatService{}
@@ -328,8 +362,10 @@ func TestExportProcessor_ProcessExport_DirectoryCreationError(t *testing.T) {
 	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusProcessing, "").Return(nil)
 	mockChatService.On("GetByOrganizationID", uint64(100), 1000, 0).Return(chats, nil)
 	// Add message service call since processor will try to load messages for each chat
-	mockMessageService.On("GetByChatID", mock.AnythingOfType("uint64")).Return([]domain.Message{}, nil)
-	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusFailed, mock.AnythingOfType("string")).Return(nil)
+	mockMessageService.On("GetByChatID", mock.AnythingOfType("uint64")).
+		Return([]domain.Message{}, nil)
+	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusFailed, mock.AnythingOfType("string")).
+		Return(nil)
 
 	payload := ExportPayload{ExportID: 1}
 	payloadBytes, err := json.Marshal(payload)
@@ -349,7 +385,11 @@ func TestExportProcessor_ProcessExport_DirectoryCreationError(t *testing.T) {
 func TestExportProcessor_ProcessExport_MessageLoadingError(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "export_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			t.Logf("Warning: failed to cleanup temp directory %s: %v", tempDir, err)
+		}
+	}()
 
 	mockExportRepo := &mocks.MockExportRepository{}
 	mockChatService := &mocks.MockChatService{}
@@ -376,8 +416,10 @@ func TestExportProcessor_ProcessExport_MessageLoadingError(t *testing.T) {
 	mockExportRepo.On("GetByID", uint64(1)).Return(export, nil)
 	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusProcessing, "").Return(nil)
 	mockChatService.On("GetByOrganizationID", uint64(100), 1000, 0).Return(chats, nil)
-	mockMessageService.On("GetByChatID", mock.AnythingOfType("uint64")).Return([]domain.Message(nil), assert.AnError)
-	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusFailed, mock.AnythingOfType("string")).Return(nil)
+	mockMessageService.On("GetByChatID", mock.AnythingOfType("uint64")).
+		Return([]domain.Message(nil), assert.AnError)
+	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusFailed, mock.AnythingOfType("string")).
+		Return(nil)
 
 	payload := ExportPayload{ExportID: 1}
 	payloadBytes, err := json.Marshal(payload)

@@ -2,6 +2,7 @@ package domain
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -43,7 +44,10 @@ func (c *Chat) GetTags() ([]string, error) {
 		return []string{}, nil
 	}
 	err := json.Unmarshal([]byte(c.Tags), &tags)
-	return tags, err
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal tags: %w", err)
+	}
+	return tags, nil
 }
 
 // SetTags converts a slice of tags into a JSON string.
@@ -53,7 +57,7 @@ func (c *Chat) SetTags(tags []string) error {
 	}
 	tagsJSON, err := json.Marshal(tags)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal tags: %w", err)
 	}
 	c.Tags = string(tagsJSON)
 	return nil
@@ -66,7 +70,10 @@ func (c *Chat) GetMetadata() (*ChatMetadata, error) {
 		return &metadata, nil // Return empty struct if no metadata
 	}
 	err := json.Unmarshal([]byte(c.Metadata), &metadata)
-	return &metadata, err
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
+	}
+	return &metadata, nil
 }
 
 // SetMetadata converts the ChatMetadata struct into a JSON string.
@@ -77,7 +84,7 @@ func (c *Chat) SetMetadata(metadata *ChatMetadata) error {
 	}
 	metadataJSON, err := json.Marshal(metadata)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal metadata: %w", err)
 	}
 	c.Metadata = string(metadataJSON)
 	return nil

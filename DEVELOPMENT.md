@@ -83,7 +83,7 @@ make ci                # Run full CI pipeline locally
 
 ### VS Code Tasks
 - **Build Server** (Ctrl+Shift+P → Tasks: Run Task)
-- **Run Tests** 
+- **Run Tests**
 - **Generate Docs**
 - **Start Docker**
 - **Run Linter**
@@ -187,7 +187,7 @@ Air provides automatic rebuilding:
 # Server hot reload
 air -c .air.toml
 
-# Worker hot reload  
+# Worker hot reload
 air -c .air.worker.toml
 ```
 

@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// BenchmarkChatService_CreateChat benchmarks chat creation service performance
+// BenchmarkChatService_CreateChat benchmarks chat creation service performance.
 func BenchmarkChatService_CreateChat(b *testing.B) {
 	mockRepo := &mocks.MockChatRepository{}
 	service := NewChatService(mockRepo)
@@ -30,7 +30,7 @@ func BenchmarkChatService_CreateChat(b *testing.B) {
 	})
 }
 
-// BenchmarkChatService_GetByID benchmarks chat retrieval performance
+// BenchmarkChatService_GetByID benchmarks chat retrieval performance.
 func BenchmarkChatService_GetByID(b *testing.B) {
 	mockRepo := &mocks.MockChatRepository{}
 	service := NewChatService(mockRepo)
@@ -52,7 +52,7 @@ func BenchmarkChatService_GetByID(b *testing.B) {
 	})
 }
 
-// BenchmarkChatService_GetByOrganizationID benchmarks organization listing performance
+// BenchmarkChatService_GetByOrganizationID benchmarks organization listing performance.
 func BenchmarkChatService_GetByOrganizationID(b *testing.B) {
 	mockRepo := &mocks.MockChatRepository{}
 	service := NewChatService(mockRepo)
@@ -118,7 +118,7 @@ func BenchmarkChatService_GetByOrganizationID(b *testing.B) {
 	})
 }
 
-// BenchmarkChatService_UpdateChat benchmarks chat update performance
+// BenchmarkChatService_UpdateChat benchmarks chat update performance.
 func BenchmarkChatService_UpdateChat(b *testing.B) {
 	mockRepo := &mocks.MockChatRepository{}
 	service := NewChatService(mockRepo)
@@ -150,7 +150,7 @@ func BenchmarkChatService_UpdateChat(b *testing.B) {
 	})
 }
 
-// BenchmarkChatService_GetChatStats benchmarks statistics aggregation performance
+// BenchmarkChatService_GetChatStats benchmarks statistics aggregation performance.
 func BenchmarkChatService_GetChatStats(b *testing.B) {
 	mockRepo := &mocks.MockChatRepository{}
 	service := NewChatService(mockRepo)
@@ -180,7 +180,7 @@ func BenchmarkChatService_GetChatStats(b *testing.B) {
 	})
 }
 
-// BenchmarkUserService_Authenticate benchmarks authentication performance
+// BenchmarkUserService_Authenticate benchmarks authentication performance.
 func BenchmarkUserService_Authenticate(b *testing.B) {
 	mockRepo := &mocks.MockUserRepository{}
 	service := NewUserService(mockRepo, "test-jwt-secret")
@@ -219,7 +219,7 @@ func BenchmarkUserService_Authenticate(b *testing.B) {
 	})
 }
 
-// BenchmarkUserService_Register benchmarks user registration performance
+// BenchmarkUserService_Register benchmarks user registration performance.
 func BenchmarkUserService_Register(b *testing.B) {
 	mockRepo := &mocks.MockUserRepository{}
 	service := NewUserService(mockRepo, "test-jwt-secret")
@@ -248,7 +248,7 @@ func BenchmarkUserService_Register(b *testing.B) {
 	})
 }
 
-// BenchmarkConcurrentServiceCalls benchmarks concurrent service operations
+// BenchmarkConcurrentServiceCalls benchmarks concurrent service operations.
 func BenchmarkConcurrentServiceCalls(b *testing.B) {
 	mockChatRepo := &mocks.MockChatRepository{}
 	mockUserRepo := &mocks.MockUserRepository{}
@@ -264,12 +264,24 @@ func BenchmarkConcurrentServiceCalls(b *testing.B) {
 
 	mockChatRepo.On("Create", mock.AnythingOfType("*domain.Chat")).Return(nil)
 	mockChatRepo.On("FindByID", mock.AnythingOfType("uint64")).Return(testChat, nil)
-	mockChatRepo.On("FindByOrganizationID", mock.AnythingOfType("uint64"),
-		mock.AnythingOfType("int"), mock.AnythingOfType("int")).Return([]domain.Chat{*testChat}, nil)
+	mockChatRepo.On(
+		"FindByOrganizationID",
+		mock.AnythingOfType("uint64"),
+		mock.AnythingOfType(
+			"int",
+		),
+		mock.AnythingOfType("int"),
+	).Return([]domain.Chat{*testChat}, nil)
 
 	mockUserRepo.On("FindByID", mock.AnythingOfType("uint64")).Return(testUser, nil)
-	mockUserRepo.On("FindByOrganizationID", mock.AnythingOfType("uint64"),
-		mock.AnythingOfType("int"), mock.AnythingOfType("int")).Return([]domain.User{*testUser}, nil)
+	mockUserRepo.On(
+		"FindByOrganizationID",
+		mock.AnythingOfType("uint64"),
+		mock.AnythingOfType(
+			"int",
+		),
+		mock.AnythingOfType("int"),
+	).Return([]domain.User{*testUser}, nil)
 
 	b.ResetTimer()
 	b.Run("MixedOperations", func(b *testing.B) {
@@ -279,15 +291,15 @@ func BenchmarkConcurrentServiceCalls(b *testing.B) {
 				switch i % 5 {
 				case 0:
 					chat := fixtures.CreateTestChat(1)
-					chatService.CreateChat(chat)
+					_ = chatService.CreateChat(chat)
 				case 1:
-					chatService.GetByID(1)
+					_, _ = chatService.GetByID(1)
 				case 2:
-					chatService.GetByOrganizationID(1, 10, 0)
+					_, _ = chatService.GetByOrganizationID(1, 10, 0)
 				case 3:
-					userService.GetByID(1)
+					_, _ = userService.GetByID(1)
 				case 4:
-					userService.GetByOrganizationID(1, 10, 0)
+					_, _ = userService.GetByOrganizationID(1, 10, 0)
 				}
 				i++
 			}
@@ -295,7 +307,7 @@ func BenchmarkConcurrentServiceCalls(b *testing.B) {
 	})
 }
 
-// BenchmarkServiceLatency benchmarks service call latency under load
+// BenchmarkServiceLatency benchmarks service call latency under load.
 func BenchmarkServiceLatency(b *testing.B) {
 	mockRepo := &mocks.MockChatRepository{}
 	service := NewChatService(mockRepo)
@@ -304,9 +316,11 @@ func BenchmarkServiceLatency(b *testing.B) {
 	testChat.ID = 1
 
 	// Add artificial delay to simulate database latency
-	mockRepo.On("FindByID", mock.AnythingOfType("uint64")).Return(testChat, nil).Run(func(args mock.Arguments) {
-		time.Sleep(time.Microsecond * 100) // 100μs simulated DB latency
-	})
+	mockRepo.On("FindByID", mock.AnythingOfType("uint64")).
+		Return(testChat, nil).
+		Run(func(args mock.Arguments) {
+			time.Sleep(time.Microsecond * 100) // 100μs simulated DB latency
+		})
 
 	b.ResetTimer()
 	b.Run("LowConcurrency", func(b *testing.B) {
@@ -346,7 +360,7 @@ func BenchmarkServiceLatency(b *testing.B) {
 	})
 }
 
-// BenchmarkMemoryAllocation benchmarks memory allocation patterns
+// BenchmarkMemoryAllocation benchmarks memory allocation patterns.
 func BenchmarkMemoryAllocation(b *testing.B) {
 	mockRepo := &mocks.MockChatRepository{}
 	service := NewChatService(mockRepo)
@@ -373,7 +387,7 @@ func BenchmarkMemoryAllocation(b *testing.B) {
 	})
 }
 
-// Helper function for benchmarks
+// Helper function for benchmarks.
 func uint64Ptr(i uint64) *uint64 {
 	return &i
 }

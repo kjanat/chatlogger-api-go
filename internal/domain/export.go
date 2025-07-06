@@ -2,7 +2,7 @@ package domain
 
 import "time"
 
-// ExportStatus represents the current status of an export job
+// ExportStatus represents the current status of an export job.
 type ExportStatus string
 
 const (
@@ -12,7 +12,7 @@ const (
 	ExportStatusFailed     ExportStatus = "failed"
 )
 
-// ExportFormat represents the format of an export
+// ExportFormat represents the format of an export.
 type ExportFormat string
 
 const (
@@ -20,7 +20,7 @@ const (
 	ExportFormatCSV  ExportFormat = "csv"
 )
 
-// ExportType represents the type of data being exported
+// ExportType represents the type of data being exported.
 type ExportType string
 
 const (
@@ -29,9 +29,9 @@ const (
 	ExportTypeAll      ExportType = "all"
 )
 
-// Export represents an asynchronous export job
+// Export represents an asynchronous export job.
 type Export struct {
-	ID             uint64       `json:"id" gorm:"primaryKey"`
+	ID             uint64       `json:"id"                     gorm:"primaryKey"`
 	OrganizationID uint64       `json:"organization_id"`
 	UserID         uint64       `json:"user_id"`
 	Format         ExportFormat `json:"format"`
@@ -44,7 +44,7 @@ type Export struct {
 	CompletedAt    *time.Time   `json:"completed_at,omitempty"`
 }
 
-// ExportRepository defines the operations available on exports
+// ExportRepository defines the operations available on exports.
 type ExportRepository interface {
 	Create(export *Export) error
 	GetByID(id uint64) (*Export, error)
@@ -53,7 +53,7 @@ type ExportRepository interface {
 	UpdateFilePath(id uint64, filePath string) error
 }
 
-// ExportService defines the interface for export-related business logic
+// ExportService defines the interface for export-related business logic.
 type ExportService interface {
 	CreateExport(orgID, userID uint64, format ExportFormat, exportType ExportType) (*Export, error)
 	GetExport(id, orgID uint64) (*Export, error)

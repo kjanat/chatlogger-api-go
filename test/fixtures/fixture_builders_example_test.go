@@ -290,7 +290,7 @@ func TestBuilderPattern_Chaining(t *testing.T) {
 	assert.Equal(t, now.Unix(), admin.LastLoginAt.Unix())
 }
 
-// Benchmark to show the performance characteristics
+// Benchmark to show the performance characteristics.
 func BenchmarkFixtureCreation(b *testing.B) {
 	b.Run("OldPattern", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {

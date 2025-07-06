@@ -41,7 +41,7 @@ check_go() {
         print_error "Go is not installed. Please install Go 1.21+ from https://golang.org/dl/"
         exit 1
     fi
-    
+
     GO_VERSION=$(go version | cut -d' ' -f3 | sed 's/go//')
     print_success "Go $GO_VERSION is installed"
 }
@@ -53,12 +53,12 @@ check_docker() {
         print_warning "Docker is not installed. Some features may not work."
         return 1
     fi
-    
+
     if \! command_exists docker-compose; then
         print_warning "Docker Compose is not installed. Some features may not work."
         return 1
     fi
-    
+
     print_success "Docker and Docker Compose are installed"
     return 0
 }
@@ -66,34 +66,34 @@ check_docker() {
 # Install development tools
 install_tools() {
     print_status "Installing development tools..."
-    
+
     # golangci-lint
     if \! command_exists golangci-lint; then
         print_status "Installing golangci-lint..."
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
     fi
-    
+
     # swag (Swagger generator)
     if \! command_exists swag; then
         print_status "Installing swag..."
         go install github.com/swaggo/swag/v2/cmd/swag@latest
     fi
-    
+
     # goimports
     print_status "Installing goimports..."
     go install golang.org/x/tools/cmd/goimports@latest
-    
+
     # govulncheck
     print_status "Installing govulncheck..."
     go install golang.org/x/vuln/cmd/govulncheck@latest
-    
+
     print_success "Development tools installed"
 }
 
 # Setup environment file
 setup_env() {
     print_status "Setting up environment configuration..."
-    
+
     if [ \! -f .env ]; then
         if [ -f .env.example ]; then
             cp .env.example .env
@@ -121,12 +121,12 @@ setup_database() {
         print_warning "Skipping database setup - Docker not available"
         return
     fi
-    
+
     print_status "Setting up development database..."
-    
+
     # Start PostgreSQL and Redis
     docker-compose up -d postgres redis
-    
+
     # Wait for PostgreSQL to be ready
     print_status "Waiting for PostgreSQL to be ready..."
     for i in {1..30}; do
@@ -135,7 +135,7 @@ setup_database() {
         fi
         sleep 1
     done
-    
+
     # Run migrations
     print_status "Running database migrations..."
     if [ -f migrations/001_initial_schema.sql ]; then
@@ -185,34 +185,34 @@ main() {
     echo "║              ChatLogger API Development Setup               ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
-    
+
     # Check prerequisites
     check_go
     check_docker
-    
+
     # Install tools and setup environment
     install_tools
     setup_env
     download_deps
-    
+
     # Setup database if Docker is available
     setup_database
-    
+
     # Generate documentation
     generate_docs
-    
+
     # VS Code setup
     setup_vscode
-    
+
     # Run basic tests
     run_tests
-    
+
     echo -e "${GREEN}"
     echo "╔══════════════════════════════════════════════════════════════╗"
     echo "║                    Setup Complete\! 🎉                       ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
-    
+
     echo "Next steps:"
     echo "1. Edit .env with your configuration"
     echo "2. Run 'make dev' to start the development environment"

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -30,7 +31,11 @@ func createTestJWT(userID, orgID uint64, role domain.Role, secret string) (strin
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(secret))
+	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", fmt.Errorf("failed to sign test JWT token: %w", err)
+	}
+	return tokenString, nil
 }
 
 func TestJWTAuth_Success(t *testing.T) {
@@ -128,7 +133,9 @@ func TestJWTAuth_ExpiredToken(t *testing.T) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(jwtSecret))
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to sign JWT token: %v", err)
+	}
 
 	router.Use(JWTAuth(jwtSecret))
 	router.GET("/test", func(c *gin.Context) {

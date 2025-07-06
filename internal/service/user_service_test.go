@@ -280,7 +280,8 @@ func TestUserService_DeleteUser_Error(t *testing.T) {
 	err := service.DeleteUser(1)
 
 	assert.Error(t, err)
-	assert.Equal(t, expectedError, err)
+	assert.Contains(t, err.Error(), "failed to delete user")
+	assert.Contains(t, err.Error(), "delete error")
 	mockRepo.AssertExpectations(t)
 }
 
@@ -317,7 +318,7 @@ func TestJWTClaims_Structure(t *testing.T) {
 	assert.Equal(t, domain.RoleAdmin, claims.Role)
 }
 
-// Helper function to count occurrences of a substring
+// Helper function to count occurrences of a substring.
 func countOccurrences(s, substr string) int {
 	count := 0
 	for i := 0; i <= len(s)-len(substr); i++ {

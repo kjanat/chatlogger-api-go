@@ -27,22 +27,37 @@ func (s *ChatService) CreateChat(chat *domain.Chat) error {
 	chat.UpdatedAt = time.Now()
 
 	// Create the chat
-	return s.chatRepo.Create(chat)
+	if err := s.chatRepo.Create(chat); err != nil {
+		return fmt.Errorf("failed to create chat: %w", err)
+	}
+	return nil
 }
 
 // GetByID gets a chat by ID.
 func (s *ChatService) GetByID(id uint64) (*domain.Chat, error) {
-	return s.chatRepo.FindByID(id)
+	chat, err := s.chatRepo.FindByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find chat by ID: %w", err)
+	}
+	return chat, nil
 }
 
 // GetByOrganizationID gets chats by organization ID with pagination.
 func (s *ChatService) GetByOrganizationID(orgID uint64, limit, offset int) ([]domain.Chat, error) {
-	return s.chatRepo.FindByOrganizationID(orgID, limit, offset)
+	chats, err := s.chatRepo.FindByOrganizationID(orgID, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find chats by organization ID: %w", err)
+	}
+	return chats, nil
 }
 
 // GetByUserID gets chats by user ID with pagination.
 func (s *ChatService) GetByUserID(userID uint64, limit, offset int) ([]domain.Chat, error) {
-	return s.chatRepo.FindByUserID(userID, limit, offset)
+	chats, err := s.chatRepo.FindByUserID(userID, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find chats by user ID: %w", err)
+	}
+	return chats, nil
 }
 
 // UpdateChat updates a chat.
@@ -61,12 +76,18 @@ func (s *ChatService) UpdateChat(chat *domain.Chat) error {
 	chat.UpdatedAt = time.Now()
 
 	// Update the chat
-	return s.chatRepo.Update(chat)
+	if err := s.chatRepo.Update(chat); err != nil {
+		return fmt.Errorf("failed to update chat: %w", err)
+	}
+	return nil
 }
 
 // DeleteChat deletes a chat.
 func (s *ChatService) DeleteChat(id uint64) error {
-	return s.chatRepo.Delete(id)
+	if err := s.chatRepo.Delete(id); err != nil {
+		return fmt.Errorf("failed to delete chat: %w", err)
+	}
+	return nil
 }
 
 // GetChatStats gets chat statistics for an organization.

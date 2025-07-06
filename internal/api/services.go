@@ -8,7 +8,7 @@ import (
 	"github.com/kjanat/chatlogger-api-go/internal/domain"
 )
 
-// AppConfig contains application configuration values
+// AppConfig contains application configuration values.
 type AppConfig struct {
 	ExportDir string
 	APIServer struct {

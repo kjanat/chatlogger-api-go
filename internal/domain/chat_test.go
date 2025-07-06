@@ -276,7 +276,7 @@ func TestChat_MetadataRoundTrip(t *testing.T) {
 	assert.Equal(t, originalMetadata, retrievedMetadata)
 }
 
-// Helper function to create int pointer
+// Helper function to create int pointer.
 func intPtr(i int) *int {
 	return &i
 }

@@ -152,4 +152,3 @@ volumes:
 networks:
   chatlogger-network:
     driver: bridge
-EOF < /dev/null

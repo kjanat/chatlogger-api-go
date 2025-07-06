@@ -3,6 +3,8 @@
 package hash
 
 import (
+	"fmt"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -14,7 +16,7 @@ func GeneratePasswordHash(password string, cost int) (string, error) {
 
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), cost)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to generate password hash: %w", err)
 	}
 
 	return string(hashedBytes), nil
@@ -22,5 +24,9 @@ func GeneratePasswordHash(password string, cost int) (string, error) {
 
 // VerifyPassword checks if the provided password matches the stored hash.
 func VerifyPassword(hashedPassword, password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	if err != nil {
+		return fmt.Errorf("password verification failed: %w", err)
+	}
+	return nil
 }

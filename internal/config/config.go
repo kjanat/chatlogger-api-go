@@ -116,7 +116,7 @@ func LoadConfig() (*Config, error) {
 	}
 
 	// Create export directory if it doesn't exist
-	if err := os.MkdirAll(cfg.ExportDir, 0755); err != nil {
+	if err := os.MkdirAll(cfg.ExportDir, 0o750); err != nil {
 		log.Printf("Warning: Failed to create export directory %s: %v", cfg.ExportDir, err)
 	}
 

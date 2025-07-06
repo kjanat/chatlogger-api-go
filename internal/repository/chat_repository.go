@@ -96,10 +96,22 @@ func (r *ChatRepo) GetTagStats(orgID uint64) (map[string]int64, error) {
 		return nil, err
 	}
 
-	// Count tags manually for now - in production, this would be done with SQL
 	tagStats := make(map[string]int64)
 
-	// Note: In a real implementation, we'd use a proper JSON library to parse the tags
-	// This is simplified for demo purposes
+	// Parse tags from each chat and count occurrences
+	for _, chat := range chats {
+		tags, err := chat.GetTags()
+		if err != nil {
+			// Skip chats with invalid tag JSON rather than failing entirely
+			continue
+		}
+
+		for _, tag := range tags {
+			if tag != "" { // Skip empty tags
+				tagStats[tag]++
+			}
+		}
+	}
+
 	return tagStats, nil
 }

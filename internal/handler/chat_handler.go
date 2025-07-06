@@ -5,9 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kjanat/chatlogger-api-go/internal/domain"
-
 	"github.com/gin-gonic/gin"
+	"github.com/kjanat/chatlogger-api-go/internal/domain"
 )
 
 // ChatHandler handles chat-related requests.
@@ -89,19 +88,28 @@ func (h *ChatHandler) CreateChat(c *gin.Context) {
 
 	// Set tags using the helper method
 	if err := chat.SetTags(req.Tags); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process tags: " + err.Error()})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to process tags: " + err.Error()},
+		)
 		return
 	}
 
 	// Set metadata using the helper method
 	if err := chat.SetMetadata(req.Metadata); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process metadata: " + err.Error()})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to process metadata: " + err.Error()},
+		)
 		return
 	}
 
 	// Create the chat
 	if err := h.chatService.CreateChat(chat); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create chat: " + err.Error()})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to create chat: " + err.Error()},
+		)
 		return
 	}
 
@@ -171,7 +179,10 @@ func (h *ChatHandler) GetChat(c *gin.Context) {
 	}
 
 	if chat.OrganizationID != orgID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to access this chat"})
+		c.JSON(
+			http.StatusForbidden,
+			gin.H{"error": "You do not have permission to access this chat"},
+		)
 		return
 	}
 
@@ -195,7 +206,10 @@ func (h *ChatHandler) GetChat(c *gin.Context) {
 	if includeMessages {
 		messages, err := h.messageService.GetByChatID(chat.ID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get messages: " + err.Error()})
+			c.JSON(
+				http.StatusInternalServerError,
+				gin.H{"error": "Failed to get messages: " + err.Error()},
+			)
 			return
 		}
 		chat.Messages = messages
@@ -306,7 +320,10 @@ func (h *ChatHandler) UpdateChat(c *gin.Context) {
 	orgID := orgIDAny.(uint64)
 
 	if chat.OrganizationID != orgID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to update this chat"})
+		c.JSON(
+			http.StatusForbidden,
+			gin.H{"error": "You do not have permission to update this chat"},
+		)
 		return
 	}
 
@@ -319,7 +336,10 @@ func (h *ChatHandler) UpdateChat(c *gin.Context) {
 
 	if req.Tags != nil { // Check if tags field was present in the request
 		if err := chat.SetTags(req.Tags); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process tags: " + err.Error()})
+			c.JSON(
+				http.StatusInternalServerError,
+				gin.H{"error": "Failed to process tags: " + err.Error()},
+			)
 			return
 		}
 		updated = true
@@ -327,7 +347,10 @@ func (h *ChatHandler) UpdateChat(c *gin.Context) {
 
 	if req.Metadata != nil { // Check if metadata field was present in the request
 		if err := chat.SetMetadata(req.Metadata); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process metadata: " + err.Error()})
+			c.JSON(
+				http.StatusInternalServerError,
+				gin.H{"error": "Failed to process metadata: " + err.Error()},
+			)
 			return
 		}
 		updated = true
@@ -337,7 +360,10 @@ func (h *ChatHandler) UpdateChat(c *gin.Context) {
 	if updated {
 		chat.UpdatedAt = time.Now()
 		if err := h.chatService.UpdateChat(chat); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update chat: " + err.Error()})
+			c.JSON(
+				http.StatusInternalServerError,
+				gin.H{"error": "Failed to update chat: " + err.Error()},
+			)
 			return
 		}
 	}

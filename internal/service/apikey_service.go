@@ -75,22 +75,36 @@ func (s *APIKeyService) ValidateKey(rawKey string) (*domain.APIKey, error) {
 
 // GetByID gets an API key by ID.
 func (s *APIKeyService) GetByID(id uint64) (*domain.APIKey, error) {
-	return s.apiKeyRepo.FindByID(id)
+	key, err := s.apiKeyRepo.FindByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find API key by ID: %w", err)
+	}
+	return key, nil
 }
 
 // ListByOrganizationID lists API keys for an organization.
 func (s *APIKeyService) ListByOrganizationID(orgID uint64) ([]domain.APIKey, error) {
-	return s.apiKeyRepo.ListByOrganizationID(orgID)
+	keys, err := s.apiKeyRepo.ListByOrganizationID(orgID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list API keys for organization: %w", err)
+	}
+	return keys, nil
 }
 
 // RevokeKey revokes an API key.
 func (s *APIKeyService) RevokeKey(id uint64) error {
-	return s.apiKeyRepo.Revoke(id)
+	if err := s.apiKeyRepo.Revoke(id); err != nil {
+		return fmt.Errorf("failed to revoke API key: %w", err)
+	}
+	return nil
 }
 
 // DeleteKey permanently deletes an API key.
 func (s *APIKeyService) DeleteKey(id uint64) error {
-	return s.apiKeyRepo.Delete(id)
+	if err := s.apiKeyRepo.Delete(id); err != nil {
+		return fmt.Errorf("failed to delete API key: %w", err)
+	}
+	return nil
 }
 
 // hashKey hashes an API key for secure storage.

@@ -200,7 +200,8 @@ func TestChatService_DeleteChat_Error(t *testing.T) {
 	err := service.DeleteChat(1)
 
 	assert.Error(t, err)
-	assert.Equal(t, expectedError, err)
+	assert.Contains(t, err.Error(), "failed to delete chat")
+	assert.Contains(t, err.Error(), "delete error")
 	mockRepo.AssertExpectations(t)
 }
 
@@ -246,7 +247,8 @@ func TestChatService_GetChatStats_CountError(t *testing.T) {
 	end := time.Now()
 	expectedError := errors.New("count error")
 
-	mockRepo.On("CountByOrgIDAndDateRange", orgID, mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(int64(0), expectedError)
+	mockRepo.On("CountByOrgIDAndDateRange", orgID, mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).
+		Return(int64(0), expectedError)
 
 	stats, err := service.GetChatStats(orgID, start, end)
 
@@ -265,7 +267,8 @@ func TestChatService_GetChatStats_TagStatsError(t *testing.T) {
 	end := time.Now()
 	expectedError := errors.New("tag stats error")
 
-	mockRepo.On("CountByOrgIDAndDateRange", orgID, mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(int64(10), nil)
+	mockRepo.On("CountByOrgIDAndDateRange", orgID, mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).
+		Return(int64(10), nil)
 	mockRepo.On("GetTagStats", orgID).Return(map[string]int64(nil), expectedError)
 
 	stats, err := service.GetChatStats(orgID, start, end)
@@ -276,7 +279,7 @@ func TestChatService_GetChatStats_TagStatsError(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-// Example test showing integration with builder pattern for specific operations
+// Example test showing integration with builder pattern for specific operations.
 func TestChatService_Integration_BuilderPattern(t *testing.T) {
 	// Using the test setup with focused mock configuration
 	setup := mocks.NewServiceTestSetup()
@@ -307,7 +310,7 @@ func TestChatService_Integration_BuilderPattern(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-// Helper function to create uint64 pointer
+// Helper function to create uint64 pointer.
 func uintPtr(i uint64) *uint64 {
 	return &i
 }

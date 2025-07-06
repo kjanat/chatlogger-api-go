@@ -23,7 +23,10 @@ func setupChatHandler() (*ChatHandler, *mocks.MockChatService, *mocks.MockMessag
 	return handler, mockChatService, mockMessageService
 }
 
-func setupGinContext(method, path string, body interface{}) (*gin.Context, *httptest.ResponseRecorder) {
+func setupGinContext(
+	method, path string,
+	body interface{},
+) (*gin.Context, *httptest.ResponseRecorder) {
 	gin.SetMode(gin.TestMode)
 
 	var reqBody []byte
@@ -58,10 +61,12 @@ func TestChatHandler_CreateChat_Success(t *testing.T) {
 	c, w := setupGinContext("POST", "/v1/chats", reqBody)
 	c.Set("orgID", uint64(100))
 
-	mockChatService.On("CreateChat", mock.AnythingOfType("*domain.Chat")).Return(nil).Run(func(args mock.Arguments) {
-		chat := args.Get(0).(*domain.Chat)
-		chat.ID = 1 // Simulate DB assignment
-	})
+	mockChatService.On("CreateChat", mock.AnythingOfType("*domain.Chat")).
+		Return(nil).
+		Run(func(args mock.Arguments) {
+			chat := args.Get(0).(*domain.Chat)
+			chat.ID = 1 // Simulate DB assignment
+		})
 
 	handler.CreateChat(c)
 
@@ -399,7 +404,7 @@ func TestChatHandler_DeleteChat_WrongOrganization(t *testing.T) {
 	mockChatService.AssertExpectations(t)
 }
 
-// Helper function to create uint64 pointer
+// Helper function to create uint64 pointer.
 func uintPtr(i uint64) *uint64 {
 	return &i
 }

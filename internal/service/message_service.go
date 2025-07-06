@@ -30,17 +30,28 @@ func (s *MessageService) CreateMessage(message *domain.Message) error {
 	message.CreatedAt = time.Now()
 
 	// Create the message
-	return s.messageRepo.Create(message)
+	if err := s.messageRepo.Create(message); err != nil {
+		return fmt.Errorf("failed to create message: %w", err)
+	}
+	return nil
 }
 
 // GetByID gets a message by ID.
 func (s *MessageService) GetByID(id uint64) (*domain.Message, error) {
-	return s.messageRepo.FindByID(id)
+	message, err := s.messageRepo.FindByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find message by ID: %w", err)
+	}
+	return message, nil
 }
 
 // GetByChatID gets messages by chat ID.
 func (s *MessageService) GetByChatID(chatID uint64) ([]domain.Message, error) {
-	return s.messageRepo.FindByChatID(chatID)
+	messages, err := s.messageRepo.FindByChatID(chatID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find messages by chat ID: %w", err)
+	}
+	return messages, nil
 }
 
 // GetMessageStats gets message statistics for an organization.

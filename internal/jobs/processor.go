@@ -14,12 +14,11 @@ import (
 	"time"
 
 	"github.com/hibiken/asynq"
-
 	"github.com/kjanat/chatlogger-api-go/internal/domain"
 	"github.com/kjanat/chatlogger-api-go/internal/strategy"
 )
 
-// ExportProcessor handles processing of export jobs
+// ExportProcessor handles processing of export jobs.
 type ExportProcessor struct {
 	exportRepo     domain.ExportRepository
 	chatService    domain.ChatService
@@ -27,7 +26,7 @@ type ExportProcessor struct {
 	exportDir      string
 }
 
-// NewExportProcessor creates a new export processor
+// NewExportProcessor creates a new export processor.
 func NewExportProcessor(
 	exportRepo domain.ExportRepository,
 	chatService domain.ChatService,
@@ -42,7 +41,7 @@ func NewExportProcessor(
 	}
 }
 
-// ProcessExport processes an export job
+// ProcessExport processes an export job.
 func (p *ExportProcessor) ProcessExport(ctx context.Context, task *asynq.Task) error {
 	var payload ExportPayload
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
@@ -118,7 +117,7 @@ func (p *ExportProcessor) ProcessExport(ctx context.Context, task *asynq.Task) e
 	}
 
 	// Create export directory if it doesn't exist
-	if err := os.MkdirAll(p.exportDir, 0755); err != nil {
+	if err := os.MkdirAll(p.exportDir, 0o750); err != nil {
 		errorMsg := fmt.Sprintf("failed to create export directory: %v", err)
 		if err := p.exportRepo.UpdateStatus(export.ID, domain.ExportStatusFailed, errorMsg); err != nil {
 			return fmt.Errorf("failed to update export status after directory error: %w", err)
@@ -140,7 +139,7 @@ func (p *ExportProcessor) ProcessExport(ctx context.Context, task *asynq.Task) e
 	filePath := filepath.Join(p.exportDir, filename)
 
 	// Write file
-	if err := os.WriteFile(filePath, exportData, 0644); err != nil {
+	if err := os.WriteFile(filePath, exportData, 0o600); err != nil {
 		errorMsg := fmt.Sprintf("failed to write export file: %v", err)
 		if err := p.exportRepo.UpdateStatus(export.ID, domain.ExportStatusFailed, errorMsg); err != nil {
 			return fmt.Errorf("failed to update export status after file write error: %w", err)
@@ -154,5 +153,8 @@ func (p *ExportProcessor) ProcessExport(ctx context.Context, task *asynq.Task) e
 	}
 
 	// Update status to completed
-	return p.exportRepo.UpdateStatus(export.ID, domain.ExportStatusCompleted, "")
+	if err := p.exportRepo.UpdateStatus(export.ID, domain.ExportStatusCompleted, ""); err != nil {
+		return fmt.Errorf("failed to update export status to completed: %w", err)
+	}
+	return nil
 }

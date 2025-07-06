@@ -80,13 +80,17 @@ func TestExportPayload_JSONTags(t *testing.T) {
 }
 
 // Integration test that requires Redis to be running
-// This test is skipped by default but can be run with Redis available
+// This test is skipped by default but can be run with Redis available.
 func TestQueue_EnqueueExport_Integration(t *testing.T) {
 	t.Skip("Skipping integration test - requires Redis")
 
 	redisAddr := "localhost:6379"
 	queue := NewQueue(redisAddr)
-	defer queue.Close()
+	defer func() {
+		if err := queue.Close(); err != nil {
+			t.Logf("Warning: failed to close queue: %v", err)
+		}
+	}()
 
 	exportID := uint64(456)
 
@@ -109,7 +113,7 @@ func TestQueue_Close(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-// Test the structure and configuration of Asynq options
+// Test the structure and configuration of Asynq options.
 func TestAsynqOptions(t *testing.T) {
 	// Test that we can create the options used in EnqueueExport
 	opts := []asynq.Option{

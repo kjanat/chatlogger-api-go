@@ -52,7 +52,7 @@ runs:
       run: |
         # Extract version from input or version file
         version=$(grep -oP '(?<=Version = ")[^"]+' "${{ inputs['version-file'] }}")
-        
+
         # Ensure version starts with 'v'
         if [[ "$version" != v* ]]; then
           version="v$version"

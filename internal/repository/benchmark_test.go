@@ -11,16 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// BenchmarkChatRepository_Create benchmarks chat creation performance
+// BenchmarkChatRepository_Create benchmarks chat creation performance.
 func BenchmarkChatRepository_Create(b *testing.B) {
-	b.Skip("Skipping benchmark - requires database setup optimization for concurrent access")
-
-	// TODO: Fix database setup for benchmarks
-	// The current setup creates temporary testing.T instances which is not correct
-	// Need to implement proper benchmark-specific database setup
-
-	db := testutils.SetupTestDB(b)
-	defer testutils.CleanupTestDB(b, db)
+	db := testutils.SetupBenchmarkDB(b)
+	defer testutils.CleanupBenchmarkDB()
 
 	dbWrapper := &Database{DB: db}
 	repo := NewChatRepository(dbWrapper)
@@ -48,12 +42,10 @@ func BenchmarkChatRepository_Create(b *testing.B) {
 	})
 }
 
-// BenchmarkChatRepository_FindByID benchmarks chat retrieval by ID
+// BenchmarkChatRepository_FindByID benchmarks chat retrieval by ID.
 func BenchmarkChatRepository_FindByID(b *testing.B) {
-	b.Skip("Skipping benchmark - requires database setup optimization for concurrent access")
-
-	db := testutils.SetupTestDB(b)
-	defer testutils.CleanupTestDB(b, db)
+	db := testutils.SetupBenchmarkDB(b)
+	defer testutils.CleanupBenchmarkDB()
 
 	dbWrapper := &Database{DB: db}
 	repo := NewChatRepository(dbWrapper)
@@ -90,12 +82,10 @@ func BenchmarkChatRepository_FindByID(b *testing.B) {
 	})
 }
 
-// BenchmarkChatRepository_FindByOrganizationID benchmarks paginated organization queries
+// BenchmarkChatRepository_FindByOrganizationID benchmarks paginated organization queries.
 func BenchmarkChatRepository_FindByOrganizationID(b *testing.B) {
-	b.Skip("Skipping benchmark - requires database setup optimization for concurrent access")
-
-	db := testutils.SetupTestDB(b)
-	defer testutils.CleanupTestDB(b, db)
+	db := testutils.SetupBenchmarkDB(b)
+	defer testutils.CleanupBenchmarkDB()
 
 	dbWrapper := &Database{DB: db}
 	repo := NewChatRepository(dbWrapper)
@@ -159,12 +149,10 @@ func BenchmarkChatRepository_FindByOrganizationID(b *testing.B) {
 	})
 }
 
-// BenchmarkChatRepository_Update benchmarks chat updates
+// BenchmarkChatRepository_Update benchmarks chat updates.
 func BenchmarkChatRepository_Update(b *testing.B) {
-	b.Skip("Skipping benchmark - requires database setup optimization for concurrent access")
-
-	db := testutils.SetupTestDB(b)
-	defer testutils.CleanupTestDB(b, db)
+	db := testutils.SetupBenchmarkDB(b)
+	defer testutils.CleanupBenchmarkDB()
 
 	dbWrapper := &Database{DB: db}
 	repo := NewChatRepository(dbWrapper)
@@ -205,12 +193,10 @@ func BenchmarkChatRepository_Update(b *testing.B) {
 	})
 }
 
-// BenchmarkMessageRepository_Create benchmarks message creation
+// BenchmarkMessageRepository_Create benchmarks message creation.
 func BenchmarkMessageRepository_Create(b *testing.B) {
-	b.Skip("Skipping benchmark - requires database setup optimization for concurrent access")
-
-	db := testutils.SetupTestDB(b)
-	defer testutils.CleanupTestDB(b, db)
+	db := testutils.SetupBenchmarkDB(b)
+	defer testutils.CleanupBenchmarkDB()
 
 	dbWrapper := &Database{DB: db}
 	messageRepo := NewMessageRepository(dbWrapper)
@@ -243,12 +229,10 @@ func BenchmarkMessageRepository_Create(b *testing.B) {
 	})
 }
 
-// BenchmarkMessageRepository_FindByChatID benchmarks message retrieval by chat
+// BenchmarkMessageRepository_FindByChatID benchmarks message retrieval by chat.
 func BenchmarkMessageRepository_FindByChatID(b *testing.B) {
-	b.Skip("Skipping benchmark - requires database setup optimization for concurrent access")
-
-	db := testutils.SetupTestDB(b)
-	defer testutils.CleanupTestDB(b, db)
+	db := testutils.SetupBenchmarkDB(b)
+	defer testutils.CleanupBenchmarkDB()
 
 	dbWrapper := &Database{DB: db}
 	messageRepo := NewMessageRepository(dbWrapper)
@@ -287,12 +271,10 @@ func BenchmarkMessageRepository_FindByChatID(b *testing.B) {
 	})
 }
 
-// BenchmarkDatabase_ConcurrentOperations benchmarks concurrent database operations
+// BenchmarkDatabase_ConcurrentOperations benchmarks concurrent database operations.
 func BenchmarkDatabase_ConcurrentOperations(b *testing.B) {
-	b.Skip("Skipping benchmark - requires database setup optimization for concurrent access")
-
-	db := testutils.SetupTestDB(b)
-	defer testutils.CleanupTestDB(b, db)
+	db := testutils.SetupBenchmarkDB(b)
+	defer testutils.CleanupBenchmarkDB()
 
 	dbWrapper := &Database{DB: db}
 	chatRepo := NewChatRepository(dbWrapper)
@@ -326,14 +308,14 @@ func BenchmarkDatabase_ConcurrentOperations(b *testing.B) {
 				case 0: // Create chat
 					chat := fixtures.CreateTestChat(user.ID)
 					chat.OrganizationID = org.ID
-					chatRepo.Create(chat)
+					_ = chatRepo.Create(chat)
 				case 1: // Read chat
-					chatRepo.FindByID(existingChats[i%len(existingChats)].ID)
+					_, _ = chatRepo.FindByID(existingChats[i%len(existingChats)].ID)
 				case 2: // Create message
 					message := fixtures.CreateTestMessage(existingChats[i%len(existingChats)].ID)
-					messageRepo.Create(message)
+					_ = messageRepo.Create(message)
 				case 3: // List chats
-					chatRepo.FindByOrganizationID(org.ID, 10, 0)
+					_, _ = chatRepo.FindByOrganizationID(org.ID, 10, 0)
 				}
 				i++
 			}
@@ -341,12 +323,10 @@ func BenchmarkDatabase_ConcurrentOperations(b *testing.B) {
 	})
 }
 
-// BenchmarkQueryPerformance benchmarks complex query performance
+// BenchmarkQueryPerformance benchmarks complex query performance.
 func BenchmarkQueryPerformance(b *testing.B) {
-	b.Skip("Skipping benchmark - requires database setup optimization for concurrent access")
-
-	db := testutils.SetupTestDB(b)
-	defer testutils.CleanupTestDB(b, db)
+	db := testutils.SetupBenchmarkDB(b)
+	defer testutils.CleanupBenchmarkDB()
 
 	dbWrapper := &Database{DB: db}
 	chatRepo := NewChatRepository(dbWrapper)
@@ -402,12 +382,10 @@ func BenchmarkQueryPerformance(b *testing.B) {
 	})
 }
 
-// BenchmarkMemoryUsage benchmarks memory usage patterns
+// BenchmarkMemoryUsage benchmarks memory usage patterns.
 func BenchmarkMemoryUsage(b *testing.B) {
-	b.Skip("Skipping benchmark - requires database setup optimization for concurrent access")
-
-	db := testutils.SetupTestDB(b)
-	defer testutils.CleanupTestDB(b, db)
+	db := testutils.SetupBenchmarkDB(b)
+	defer testutils.CleanupBenchmarkDB()
 
 	dbWrapper := &Database{DB: db}
 	chatRepo := NewChatRepository(dbWrapper)
@@ -425,7 +403,10 @@ func BenchmarkMemoryUsage(b *testing.B) {
 	for i := 0; i < 1000; i++ {
 		chat := fixtures.CreateTestChat(user.ID)
 		chat.OrganizationID = org.ID
-		chat.Metadata = fmt.Sprintf(`{"large_field": "%s"}`, string(make([]byte, 1024))) // 1KB metadata
+		chat.Metadata = fmt.Sprintf(
+			`{"large_field": "%s"}`,
+			string(make([]byte, 1024)),
+		) // 1KB metadata
 		err := chatRepo.Create(chat)
 		require.NoError(b, err)
 	}
@@ -442,12 +423,10 @@ func BenchmarkMemoryUsage(b *testing.B) {
 	})
 }
 
-// BenchmarkConnectionPooling benchmarks database connection efficiency
+// BenchmarkConnectionPooling benchmarks database connection efficiency.
 func BenchmarkConnectionPooling(b *testing.B) {
-	b.Skip("Skipping benchmark - requires database setup optimization for concurrent access")
-
-	db := testutils.SetupTestDB(b)
-	defer testutils.CleanupTestDB(b, db)
+	db := testutils.SetupBenchmarkDB(b)
+	defer testutils.CleanupBenchmarkDB()
 
 	// Configure connection pool
 	sqlDB, err := db.DB()

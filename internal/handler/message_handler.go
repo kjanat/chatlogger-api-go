@@ -5,9 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kjanat/chatlogger-api-go/internal/domain"
-
 	"github.com/gin-gonic/gin"
+	"github.com/kjanat/chatlogger-api-go/internal/domain"
 )
 
 // MessageHandler handles message-related requests.
@@ -118,7 +117,10 @@ func (h *MessageHandler) CreateMessage(c *gin.Context) {
 
 	// Set metadata
 	if err := message.SetMetadata(req.Metadata); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process message metadata: " + err.Error()})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to process message metadata: " + err.Error()},
+		)
 
 		return
 	}
@@ -132,7 +134,10 @@ func (h *MessageHandler) CreateMessage(c *gin.Context) {
 
 	// Create the message
 	if err := h.messageService.CreateMessage(message); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create message: " + err.Error()})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to create message: " + err.Error()},
+		)
 
 		return
 	}
@@ -216,7 +221,10 @@ func (h *MessageHandler) GetMessages(c *gin.Context) {
 	// Get messages for the chat
 	messages, err := h.messageService.GetByChatID(chat.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get messages: " + err.Error()})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to get messages: " + err.Error()},
+		)
 
 		return
 	}

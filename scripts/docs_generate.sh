@@ -32,7 +32,7 @@ done
 prep_env() {
     local outPath="$1"
     local filePath="$2"
-    
+
     # Ensure we're starting with fresh docs
     if [ -d "$outPath" ]; then
         echo "Cleaning previous documentation..."

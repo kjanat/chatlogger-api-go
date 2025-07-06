@@ -15,7 +15,76 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// SetupTestDB creates a test database connection
+// benchmarkDB holds a shared database connection for benchmarks.
+var benchmarkDB *gorm.DB
+
+// SetupBenchmarkDB creates or returns a shared database connection optimized for benchmarks.
+func SetupBenchmarkDB(b *testing.B) *gorm.DB {
+	b.Helper()
+
+	if benchmarkDB != nil {
+		// Clean existing data for clean benchmark runs
+		CleanBenchmarkData(benchmarkDB)
+		return benchmarkDB
+	}
+
+	// Create a dedicated test database for benchmarks
+	testDBURL := os.Getenv("BENCHMARK_DATABASE_URL")
+	if testDBURL == "" {
+		testDBURL = os.Getenv("TEST_DATABASE_URL")
+	}
+	if testDBURL == "" {
+		b.Skip("No database available for benchmark tests")
+	}
+
+	db, err := gorm.Open(postgres.Open(testDBURL), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
+	if err != nil {
+		b.Skipf("Failed to connect to benchmark database: %v", err)
+	}
+
+	// Configure connection pool for concurrent access
+	sqlDB, err := db.DB()
+	if err != nil {
+		b.Skipf("Failed to get SQL DB: %v", err)
+	}
+
+	// Configure connection pool for concurrent benchmark access
+	sqlDB.SetMaxOpenConns(20)
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	// Auto-migrate schemas
+	if err := AutoMigrateTestSchema(db); err != nil {
+		b.Skipf("Failed to migrate benchmark schema: %v", err)
+	}
+
+	benchmarkDB = db
+	return benchmarkDB
+}
+
+// CleanBenchmarkData removes all data from benchmark tables for clean runs.
+func CleanBenchmarkData(db *gorm.DB) {
+	// Order matters due to foreign key constraints
+	tables := []string{"messages", "chats", "api_keys", "users", "organizations", "exports"}
+	for _, table := range tables {
+		db.Exec("DELETE FROM " + table)
+	}
+}
+
+// CleanupBenchmarkDB properly closes the benchmark database connection.
+func CleanupBenchmarkDB() {
+	if benchmarkDB != nil {
+		sqlDB, err := benchmarkDB.DB()
+		if err == nil {
+			_ = sqlDB.Close()
+		}
+		benchmarkDB = nil
+	}
+}
+
+// SetupTestDB creates a test database connection.
 func SetupTestDB(t testing.TB) *gorm.DB {
 	t.Helper()
 
@@ -45,7 +114,8 @@ func SetupTestDB(t testing.TB) *gorm.DB {
 
 	// Verify tables exist
 	var tableCount int64
-	db.Raw("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('organizations', 'users', 'chats', 'messages', 'api_keys', 'exports')").Scan(&tableCount)
+	db.Raw("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('organizations', 'users', 'chats', 'messages', 'api_keys', 'exports')").
+		Scan(&tableCount)
 	if tableCount == 0 {
 		t.Fatalf("No tables created after migration")
 	}
@@ -53,7 +123,7 @@ func SetupTestDB(t testing.TB) *gorm.DB {
 	return db
 }
 
-// CleanupTestDB cleans up test database
+// CleanupTestDB cleans up test database.
 func CleanupTestDB(t testing.TB, db *gorm.DB) {
 	t.Helper()
 
@@ -80,37 +150,39 @@ func CleanupTestDB(t testing.TB, db *gorm.DB) {
 		}
 	}
 
-	sqlDB.Close()
+	if err := sqlDB.Close(); err != nil {
+		t.Logf("Warning: failed to close database connection: %v", err)
+	}
 }
 
-// SetupTestRouter creates a test gin router
+// SetupTestRouter creates a test gin router.
 func SetupTestRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	return gin.New()
 }
 
-// GetTestDatabaseName returns the test database name
+// GetTestDatabaseName returns the test database name.
 func GetTestDatabaseName() string {
 	return "chatlogger_test"
 }
 
-// WaitForDatabase waits for database to be ready
+// WaitForDatabase waits for database to be ready.
 func WaitForDatabase(dbURL string, maxRetries int) error {
 	for i := 0; i < maxRetries; i++ {
 		db, err := sql.Open("postgres", dbURL)
 		if err == nil {
 			if err := db.Ping(); err == nil {
-				db.Close()
+				_ = db.Close() // Successful connection, safe to ignore close error
 				return nil
 			}
-			db.Close()
+			_ = db.Close() // Failed connection, safe to ignore close error
 		}
 		time.Sleep(1 * time.Second)
 	}
 	return fmt.Errorf("database not ready after %d retries", maxRetries)
 }
 
-// AutoMigrateTestSchema migrates all domain models for testing
+// AutoMigrateTestSchema migrates all domain models for testing.
 func AutoMigrateTestSchema(db *gorm.DB) error {
 	// Import the actual domain models for proper schema generation
 	err := db.AutoMigrate(
@@ -121,7 +193,6 @@ func AutoMigrateTestSchema(db *gorm.DB) error {
 		&domain.APIKey{},
 		&domain.Export{},
 	)
-
 	if err != nil {
 		return fmt.Errorf("failed to auto-migrate schema: %w", err)
 	}

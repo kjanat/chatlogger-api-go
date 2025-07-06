@@ -14,10 +14,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestConcurrentChatCreation tests for race conditions during concurrent chat creation
+// TestConcurrentChatCreation tests for race conditions during concurrent chat creation.
 func TestConcurrentChatCreation(t *testing.T) {
-	t.Skip("Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines")
-	t.Skip("Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines")
+	t.Skip(
+		"Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines",
+	)
+	t.Skip(
+		"Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines",
+	)
 	if testing.Short() {
 		t.Skip("Skipping race condition test in short mode")
 	}
@@ -27,7 +31,9 @@ func TestConcurrentChatCreation(t *testing.T) {
 
 	// Verify tables exist before proceeding
 	var count int64
-	err := db.Raw("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='chats'").Scan(&count).Error
+	err := db.Raw("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='chats'").
+		Scan(&count).
+		Error
 	require.NoError(t, err)
 	if count == 0 {
 		t.Fatalf("Chats table does not exist")
@@ -99,13 +105,22 @@ func TestConcurrentChatCreation(t *testing.T) {
 	}
 
 	assert.Equal(t, 0, duplicates, "Should have no duplicate IDs from concurrent creation")
-	assert.Equal(t, numGoroutines*chatsPerGoroutine, len(idSet), "Should have created expected number of unique chats")
+	assert.Equal(
+		t,
+		numGoroutines*chatsPerGoroutine,
+		len(idSet),
+		"Should have created expected number of unique chats",
+	)
 }
 
-// TestConcurrentReadWrite tests concurrent read/write operations for race conditions
+// TestConcurrentReadWrite tests concurrent read/write operations for race conditions.
 func TestConcurrentReadWrite(t *testing.T) {
-	t.Skip("Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines")
-	t.Skip("Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines")
+	t.Skip(
+		"Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines",
+	)
+	t.Skip(
+		"Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines",
+	)
 	if testing.Short() {
 		t.Skip("Skipping race condition test in short mode")
 	}
@@ -189,12 +204,19 @@ func TestConcurrentReadWrite(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, 0, errorCount, "Should have no race condition errors in concurrent read/write operations")
+	assert.Equal(
+		t,
+		0,
+		errorCount,
+		"Should have no race condition errors in concurrent read/write operations",
+	)
 }
 
-// TestConcurrentConnectionHandling tests database connection pool under concurrent load
+// TestConcurrentConnectionHandling tests database connection pool under concurrent load.
 func TestConcurrentConnectionHandling(t *testing.T) {
-	t.Skip("Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines")
+	t.Skip(
+		"Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines",
+	)
 	if testing.Short() {
 		t.Skip("Skipping race condition test in short mode")
 	}
@@ -272,9 +294,11 @@ func TestConcurrentConnectionHandling(t *testing.T) {
 	assert.Equal(t, 0, errorCount, "Should handle concurrent connections without errors")
 }
 
-// TestRaceConditionInTransactions tests for race conditions in transaction handling
+// TestRaceConditionInTransactions tests for race conditions in transaction handling.
 func TestRaceConditionInTransactions(t *testing.T) {
-	t.Skip("Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines")
+	t.Skip(
+		"Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines",
+	)
 	if testing.Short() {
 		t.Skip("Skipping race condition test in short mode")
 	}
@@ -364,17 +388,29 @@ func TestRaceConditionInTransactions(t *testing.T) {
 	var chatCount int64
 	err = db.Model(&domain.Chat{}).Where("organization_id = ?", org.ID).Count(&chatCount).Error
 	require.NoError(t, err)
-	assert.Equal(t, int64(numTransactions), chatCount, "Should have created expected number of chats")
+	assert.Equal(
+		t,
+		int64(numTransactions),
+		chatCount,
+		"Should have created expected number of chats",
+	)
 
 	var messageCount int64
 	err = db.Model(&domain.Message{}).Count(&messageCount).Error
 	require.NoError(t, err)
-	assert.Equal(t, int64(numTransactions), messageCount, "Should have created expected number of messages")
+	assert.Equal(
+		t,
+		int64(numTransactions),
+		messageCount,
+		"Should have created expected number of messages",
+	)
 }
 
-// TestMemoryRaceConditions tests for memory-related race conditions
+// TestMemoryRaceConditions tests for memory-related race conditions.
 func TestMemoryRaceConditions(t *testing.T) {
-	t.Skip("Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines")
+	t.Skip(
+		"Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines",
+	)
 	if testing.Short() {
 		t.Skip("Skipping race condition test in short mode")
 	}
@@ -449,9 +485,11 @@ func TestMemoryRaceConditions(t *testing.T) {
 	assert.Equal(t, numGoroutines, sharedCounter.count, "Shared counter should have correct value")
 }
 
-// TestGoroutineLeaks tests for goroutine leaks in concurrent operations
+// TestGoroutineLeaks tests for goroutine leaks in concurrent operations.
 func TestGoroutineLeaks(t *testing.T) {
-	t.Skip("Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines")
+	t.Skip(
+		"Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines",
+	)
 	if testing.Short() {
 		t.Skip("Skipping race condition test in short mode")
 	}
@@ -485,7 +523,7 @@ func TestGoroutineLeaks(t *testing.T) {
 
 				chat := fixtures.CreateTestChat(user.ID)
 				chat.OrganizationID = org.ID
-				repo.Create(chat)
+				_ = repo.Create(chat)
 
 				// Force some work to potentially leak
 				done := make(chan bool)
@@ -512,12 +550,20 @@ func TestGoroutineLeaks(t *testing.T) {
 
 	// We allow some tolerance for background goroutines
 	goroutineDiff := finalGoroutines - initialGoroutines
-	assert.LessOrEqual(t, goroutineDiff, 5, "Should not leak significant number of goroutines (leaked: %d)", goroutineDiff)
+	assert.LessOrEqual(
+		t,
+		goroutineDiff,
+		5,
+		"Should not leak significant number of goroutines (leaked: %d)",
+		goroutineDiff,
+	)
 }
 
-// TestDataRaceInStats tests for race conditions in statistics calculations
+// TestDataRaceInStats tests for race conditions in statistics calculations.
 func TestDataRaceInStats(t *testing.T) {
-	t.Skip("Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines")
+	t.Skip(
+		"Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines",
+	)
 	if testing.Short() {
 		t.Skip("Skipping race condition test in short mode")
 	}
@@ -591,5 +637,10 @@ func TestDataRaceInStats(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, 0, errorCount, "Should have no race condition errors in statistics calculations")
+	assert.Equal(
+		t,
+		0,
+		errorCount,
+		"Should have no race condition errors in statistics calculations",
+	)
 }

@@ -43,9 +43,23 @@ func TestChatRepository_Create(t *testing.T) {
 	assert.NotEmpty(t, chat.Metadata, "Chat metadata should be set")
 
 	// Validate timestamps
-	assert.True(t, chat.CreatedAt.After(originalTime.Add(-1*time.Second)), "CreatedAt should be recent")
-	assert.True(t, chat.UpdatedAt.After(originalTime.Add(-1*time.Second)), "UpdatedAt should be recent")
-	assert.WithinDuration(t, chat.CreatedAt, chat.UpdatedAt, time.Millisecond*100, "CreatedAt and UpdatedAt should be close")
+	assert.True(
+		t,
+		chat.CreatedAt.After(originalTime.Add(-1*time.Second)),
+		"CreatedAt should be recent",
+	)
+	assert.True(
+		t,
+		chat.UpdatedAt.After(originalTime.Add(-1*time.Second)),
+		"UpdatedAt should be recent",
+	)
+	assert.WithinDuration(
+		t,
+		chat.CreatedAt,
+		chat.UpdatedAt,
+		time.Millisecond*100,
+		"CreatedAt and UpdatedAt should be close",
+	)
 
 	// Validate chat was actually persisted
 	var count int64
@@ -87,8 +101,20 @@ func TestChatRepository_FindByID(t *testing.T) {
 	assert.Equal(t, chat.UserID, foundChat.UserID, "User ID should match")
 	assert.Equal(t, chat.Tags, foundChat.Tags, "Tags should match")
 	assert.Equal(t, chat.Metadata, foundChat.Metadata, "Metadata should match")
-	assert.WithinDuration(t, chat.CreatedAt, foundChat.CreatedAt, time.Second, "CreatedAt should match")
-	assert.WithinDuration(t, chat.UpdatedAt, foundChat.UpdatedAt, time.Second, "UpdatedAt should match")
+	assert.WithinDuration(
+		t,
+		chat.CreatedAt,
+		foundChat.CreatedAt,
+		time.Second,
+		"CreatedAt should match",
+	)
+	assert.WithinDuration(
+		t,
+		chat.UpdatedAt,
+		foundChat.UpdatedAt,
+		time.Second,
+		"UpdatedAt should match",
+	)
 
 	// Test finding non-existent chat
 	nonExistentChat, err := repo.FindByID(9999)

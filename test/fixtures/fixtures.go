@@ -8,9 +8,9 @@ import (
 	"github.com/kjanat/chatlogger-api-go/internal/domain"
 )
 
-// CreateTestOrganization creates a test organization
+// CreateTestOrganization creates a test organization.
 func CreateTestOrganization() *domain.Organization {
-	random := rand.Intn(100000)
+	random := rand.Intn(100000) //nolint:gosec // Test fixtures use weak random
 	return &domain.Organization{
 		Name:      fmt.Sprintf("Test Organization %d", random),
 		Slug:      fmt.Sprintf("test-org-%d", random),
@@ -20,9 +20,9 @@ func CreateTestOrganization() *domain.Organization {
 	}
 }
 
-// CreateTestUser creates a test user
+// CreateTestUser creates a test user.
 func CreateTestUser(orgID uint64) *domain.User {
-	random := rand.Intn(100000)
+	random := rand.Intn(100000) //nolint:gosec // Test fixtures use weak random
 	return &domain.User{
 		OrganizationID: orgID,
 		Email:          fmt.Sprintf("test%d@example.com", random),
@@ -35,7 +35,7 @@ func CreateTestUser(orgID uint64) *domain.User {
 	}
 }
 
-// CreateTestChat creates a test chat
+// CreateTestChat creates a test chat.
 func CreateTestChat(userID uint64) *domain.Chat {
 	userIDPtr := &userID
 	return &domain.Chat{
@@ -49,7 +49,7 @@ func CreateTestChat(userID uint64) *domain.Chat {
 	}
 }
 
-// CreateTestMessage creates a test message
+// CreateTestMessage creates a test message.
 func CreateTestMessage(chatID uint64) *domain.Message {
 	return &domain.Message{
 		ChatID:    chatID,
@@ -60,7 +60,7 @@ func CreateTestMessage(chatID uint64) *domain.Message {
 	}
 }
 
-// CreateTestExport creates a test export
+// CreateTestExport creates a test export.
 func CreateTestExport(userID uint64) *domain.Export {
 	return &domain.Export{
 		OrganizationID: 1,
@@ -73,7 +73,7 @@ func CreateTestExport(userID uint64) *domain.Export {
 	}
 }
 
-// CreateTestAPIKey creates a test API key
+// CreateTestAPIKey creates a test API key.
 func CreateTestAPIKey(orgID uint64) *domain.APIKey {
 	return &domain.APIKey{
 		OrganizationID: orgID,
@@ -83,9 +83,9 @@ func CreateTestAPIKey(orgID uint64) *domain.APIKey {
 	}
 }
 
-// CreateTestSuperadmin creates a test superadmin user
+// CreateTestSuperadmin creates a test superadmin user.
 func CreateTestSuperadmin(orgID uint64) *domain.User {
-	random := rand.Intn(100000)
+	random := rand.Intn(100000) //nolint:gosec // Test fixtures use weak random
 	return &domain.User{
 		OrganizationID: orgID,
 		Email:          fmt.Sprintf("superadmin%d@example.com", random),

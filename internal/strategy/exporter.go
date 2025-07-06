@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/kjanat/chatlogger-api-go/internal/domain"
+	"github.com/pkg/errors"
 )
 
 // Exporter defines the interface for export strategies.
@@ -27,7 +28,11 @@ type JSONExporter struct{}
 
 // Export exports data to JSON format.
 func (j *JSONExporter) Export(data interface{}) ([]byte, error) {
-	return json.MarshalIndent(data, "", "  ")
+	result, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal data to JSON")
+	}
+	return result, nil
 }
 
 // CSVExporter implements the Exporter interface for CSV format.
@@ -63,7 +68,7 @@ func (c *CSVExporter) Export(data interface{}) ([]byte, error) {
 		"Message ID", "Role", "Content", "Timestamp", "Token Count", "Latency",
 	}
 	if err := writer.Write(header); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to write CSV header")
 	}
 
 	// Write data
@@ -83,7 +88,7 @@ func (c *CSVExporter) Export(data interface{}) ([]byte, error) {
 		if len(chat.Messages) == 0 {
 			row := []string{chatID, orgID, userID, title, createdAt, "", "", "", "", "", ""}
 			if err := writer.Write(row); err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "failed to write CSV row for chat without messages")
 			}
 			continue
 		}
@@ -111,7 +116,7 @@ func (c *CSVExporter) Export(data interface{}) ([]byte, error) {
 				messageID, role, content, timestamp, tokenCount, latency,
 			}
 			if err := writer.Write(row); err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "failed to write CSV row for message")
 			}
 		}
 	}
