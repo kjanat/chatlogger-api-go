@@ -270,6 +270,13 @@ func (h *MessageHandler) GetMessageStats(c *gin.Context) {
 		return
 	}
 
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Organization ID type in context"})
+		return
+	}
+
 	// Parse date range parameters
 	startStr := c.DefaultQuery("start", "")
 	endStr := c.DefaultQuery("end", "")
@@ -303,7 +310,7 @@ func (h *MessageHandler) GetMessageStats(c *gin.Context) {
 	}
 
 	// Get message statistics
-	stats, err := h.messageService.GetMessageStats(uint64(orgID.(uint64)), start, end)
+	stats, err := h.messageService.GetMessageStats(orgIDValue, start, end)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get message statistics"})
 

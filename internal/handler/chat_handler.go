@@ -244,12 +244,19 @@ func (h *ChatHandler) ListChats(c *gin.Context) {
 		return
 	}
 
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Organization ID type in context"})
+		return
+	}
+
 	// Parse pagination parameters
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 
 	// Get chats
-	chats, err := h.chatService.GetByOrganizationID(orgID.(uint64), limit, offset)
+	chats, err := h.chatService.GetByOrganizationID(orgIDValue, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list chats"})
 		return
@@ -467,8 +474,15 @@ func (h *ChatHandler) DeleteChat(c *gin.Context) {
 		return
 	}
 
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Organization ID type in context"})
+		return
+	}
+
 	// Check if the chat belongs to the organization
-	if chat.OrganizationID != orgID.(uint64) {
+	if chat.OrganizationID != orgIDValue {
 		c.JSON(
 			http.StatusForbidden,
 			gin.H{"error": "You do not have permission to delete this chat"},

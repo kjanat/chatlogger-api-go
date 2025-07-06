@@ -106,10 +106,24 @@ func (h *ExportHandler) CreateExport(c *gin.Context) {
 		return
 	}
 
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid organization ID type"})
+		return
+	}
+
+	// Type assert user ID
+	userIDValue, ok := userID.(uint64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID type"})
+		return
+	}
+
 	// Create the export job
 	export, err := h.exportService.CreateExport(
-		orgID.(uint64),
-		userID.(uint64),
+		orgIDValue,
+		userIDValue,
 		format,
 		exportType,
 	)
@@ -155,7 +169,14 @@ func (h *ExportHandler) GetExport(c *gin.Context) {
 		return
 	}
 
-	export, err := h.exportService.GetExport(exportID, orgID.(uint64))
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid organization ID type"})
+		return
+	}
+
+	export, err := h.exportService.GetExport(exportID, orgIDValue)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Export not found"})
 		return
@@ -192,7 +213,14 @@ func (h *ExportHandler) DownloadExport(c *gin.Context) {
 		return
 	}
 
-	export, err := h.exportService.GetExport(exportID, orgID.(uint64))
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid organization ID type"})
+		return
+	}
+
+	export, err := h.exportService.GetExport(exportID, orgIDValue)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Export not found"})
 		return
@@ -272,7 +300,14 @@ func (h *ExportHandler) ListExports(c *gin.Context) {
 		return
 	}
 
-	exports, err := h.exportService.ListExports(orgID.(uint64), limit, offset)
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid organization ID type"})
+		return
+	}
+
+	exports, err := h.exportService.ListExports(orgIDValue, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch exports"})
 		return
@@ -328,7 +363,13 @@ func (h *ExportHandler) parseSyncExportRequest(c *gin.Context) (*ExportRequest, 
 		return nil, 0, fmt.Errorf("missing org ID")
 	}
 
-	return &req, orgID.(uint64), nil
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		return nil, 0, fmt.Errorf("invalid organization ID type")
+	}
+
+	return &req, orgIDValue, nil
 }
 
 // loadSyncExportData retrieves chats and messages for the export.
