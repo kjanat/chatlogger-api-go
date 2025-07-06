@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -282,100 +283,136 @@ type UpdateChatRequest struct {
 //	@Security		BearerAuth
 //	@Router			/v1/chats/{chatID} [patch]
 func (h *ChatHandler) UpdateChat(c *gin.Context) {
-	// Get chat ID from URL
+	id, req, err := h.parseUpdateChatRequest(c)
+	if err != nil {
+		return // Error already sent in response
+	}
+
+	chat, err := h.validateChatAccess(c, id)
+	if err != nil {
+		return // Error already sent in response
+	}
+
+	if h.applyChatUpdates(c, chat, req) {
+		h.saveChatUpdates(c, chat)
+	}
+
+	h.sendChatResponse(c, chat)
+}
+
+// parseUpdateChatRequest parses and validates the update request.
+func (h *ChatHandler) parseUpdateChatRequest(c *gin.Context) (uint64, *UpdateChatRequest, error) {
 	chatID := c.Param("chatID")
 	if chatID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Chat ID is required"})
-		return
+		return 0, nil, fmt.Errorf("missing chat ID")
 	}
 
 	id, err := strconv.ParseUint(chatID, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chat ID"})
-		return
+		return 0, nil, fmt.Errorf("failed to parse chat ID: %w", err)
 	}
 
 	var req UpdateChatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data: " + err.Error()})
-		return
+		return 0, nil, fmt.Errorf("failed to bind JSON request: %w", err)
 	}
 
+	return id, &req, nil
+}
+
+// validateChatAccess retrieves the chat and validates user permissions.
+func (h *ChatHandler) validateChatAccess(c *gin.Context, id uint64) (*domain.Chat, error) {
 	chat, err := h.chatService.GetByID(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get chat: " + err.Error()})
-		return
+		return nil, fmt.Errorf("failed to get chat: %w", err)
 	}
 
 	if chat == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Chat not found"})
-		return
+		return nil, fmt.Errorf("chat not found")
 	}
 
 	orgIDAny, exists := c.Get("orgID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found in context"})
-		return
+		return nil, fmt.Errorf("missing org ID")
 	}
+
 	orgID := orgIDAny.(uint64)
-
 	if chat.OrganizationID != orgID {
-		c.JSON(
-			http.StatusForbidden,
-			gin.H{"error": "You do not have permission to update this chat"},
-		)
-		return
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "You do not have permission to update this chat",
+		})
+		return nil, fmt.Errorf("permission denied")
 	}
 
-	// Update chat fields if provided
+	return chat, nil
+}
+
+// applyChatUpdates applies the requested updates to the chat and returns whether any changes were made.
+func (h *ChatHandler) applyChatUpdates(
+	c *gin.Context,
+	chat *domain.Chat,
+	req *UpdateChatRequest,
+) bool {
 	updated := false
+
 	if req.Title != "" {
 		chat.Title = req.Title
 		updated = true
 	}
 
-	if req.Tags != nil { // Check if tags field was present in the request
+	if req.Tags != nil {
 		if err := chat.SetTags(req.Tags); err != nil {
-			c.JSON(
-				http.StatusInternalServerError,
-				gin.H{"error": "Failed to process tags: " + err.Error()},
-			)
-			return
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to process tags: " + err.Error(),
+			})
+			return false
 		}
 		updated = true
 	}
 
-	if req.Metadata != nil { // Check if metadata field was present in the request
+	if req.Metadata != nil {
 		if err := chat.SetMetadata(req.Metadata); err != nil {
 			c.JSON(
 				http.StatusInternalServerError,
 				gin.H{"error": "Failed to process metadata: " + err.Error()},
 			)
-			return
+			return false
 		}
 		updated = true
 	}
 
-	// Update the chat only if something changed
-	if updated {
-		chat.UpdatedAt = time.Now()
-		if err := h.chatService.UpdateChat(chat); err != nil {
-			c.JSON(
-				http.StatusInternalServerError,
-				gin.H{"error": "Failed to update chat: " + err.Error()},
-			)
-			return
-		}
+	return updated
+}
+
+// saveChatUpdates saves the updated chat to the database.
+func (h *ChatHandler) saveChatUpdates(c *gin.Context, chat *domain.Chat) {
+	chat.UpdatedAt = time.Now()
+	if err := h.chatService.UpdateChat(chat); err != nil {
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to update chat: " + err.Error()},
+		)
+	}
+}
+
+// sendChatResponse prepares and sends the response with updated chat data.
+func (h *ChatHandler) sendChatResponse(c *gin.Context, chat *domain.Chat) {
+	response := &GetChatResponse{Chat: chat}
+
+	if metadata, _ := chat.GetMetadata(); metadata != nil {
+		response.ParsedMetadata = metadata
 	}
 
-	// Prepare response similar to GetChat
-	response := &GetChatResponse{
-		Chat: chat,
+	if tags, _ := chat.GetTags(); tags != nil {
+		response.ParsedTags = tags
 	}
-	metadata, _ := chat.GetMetadata()
-	response.ParsedMetadata = metadata
-	tags, _ := chat.GetTags()
-	response.ParsedTags = tags
+
 	response.Metadata = ""
 	response.Tags = ""
 

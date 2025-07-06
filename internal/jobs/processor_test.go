@@ -249,7 +249,7 @@ func TestExportProcessor_ProcessExport_UnsupportedFormat(t *testing.T) {
 	// Add message service call since processor will try to load messages for each chat
 	mockMessageService.On("GetByChatID", mock.AnythingOfType("uint64")).
 		Return([]domain.Message{}, nil)
-	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusFailed, "unsupported export format").
+	mockExportRepo.On("UpdateStatus", uint64(1), domain.ExportStatusFailed, "unsupported export format: unsupported format: unsupported").
 		Return(nil)
 
 	payload := ExportPayload{ExportID: 1}
