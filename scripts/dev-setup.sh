@@ -129,7 +129,7 @@ setup_database() {
 
     # Wait for PostgreSQL to be ready
     print_status "Waiting for PostgreSQL to be ready..."
-    for i in {1..30}; do
+    for _ in {1..30}; do
         if docker-compose exec postgres pg_isready -U postgres >/dev/null 2>&1; then
             break
         fi
