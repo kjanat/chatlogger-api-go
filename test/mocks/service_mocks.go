@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -13,16 +14,16 @@ type MockChatService struct {
 	mock.Mock
 }
 
-func (m *MockChatService) CreateChat(chat *domain.Chat) error {
-	args := m.Called(chat)
+func (m *MockChatService) CreateChat(ctx context.Context, chat *domain.Chat) error {
+	args := m.Called(ctx, chat)
 	if err := args.Error(0); err != nil {
 		return fmt.Errorf("mock create chat error: %w", err)
 	}
 	return nil
 }
 
-func (m *MockChatService) GetByID(id uint64) (*domain.Chat, error) {
-	args := m.Called(id)
+func (m *MockChatService) GetByID(ctx context.Context, id uint64) (*domain.Chat, error) {
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		if err := args.Error(1); err != nil {
 			return nil, fmt.Errorf("mock get chat by ID error: %w", err)
@@ -37,10 +38,11 @@ func (m *MockChatService) GetByID(id uint64) (*domain.Chat, error) {
 }
 
 func (m *MockChatService) GetByOrganizationID(
+	ctx context.Context,
 	orgID uint64,
 	limit, offset int,
 ) ([]domain.Chat, error) {
-	args := m.Called(orgID, limit, offset)
+	args := m.Called(ctx, orgID, limit, offset)
 	chats := args.Get(0).([]domain.Chat)
 	if err := args.Error(1); err != nil {
 		return nil, fmt.Errorf("mock get chats by organization ID error: %w", err)
@@ -48,8 +50,12 @@ func (m *MockChatService) GetByOrganizationID(
 	return chats, nil
 }
 
-func (m *MockChatService) GetByUserID(userID uint64, limit, offset int) ([]domain.Chat, error) {
-	args := m.Called(userID, limit, offset)
+func (m *MockChatService) GetByUserID(
+	ctx context.Context,
+	userID uint64,
+	limit, offset int,
+) ([]domain.Chat, error) {
+	args := m.Called(ctx, userID, limit, offset)
 	chats := args.Get(0).([]domain.Chat)
 	if err := args.Error(1); err != nil {
 		return nil, fmt.Errorf("mock get chats by user ID error: %w", err)
@@ -57,16 +63,16 @@ func (m *MockChatService) GetByUserID(userID uint64, limit, offset int) ([]domai
 	return chats, nil
 }
 
-func (m *MockChatService) UpdateChat(chat *domain.Chat) error {
-	args := m.Called(chat)
+func (m *MockChatService) UpdateChat(ctx context.Context, chat *domain.Chat) error {
+	args := m.Called(ctx, chat)
 	if err := args.Error(0); err != nil {
 		return fmt.Errorf("mock update chat error: %w", err)
 	}
 	return nil
 }
 
-func (m *MockChatService) DeleteChat(id uint64) error {
-	args := m.Called(id)
+func (m *MockChatService) DeleteChat(ctx context.Context, id uint64) error {
+	args := m.Called(ctx, id)
 	if err := args.Error(0); err != nil {
 		return fmt.Errorf("mock delete chat error: %w", err)
 	}
@@ -74,11 +80,18 @@ func (m *MockChatService) DeleteChat(id uint64) error {
 }
 
 func (m *MockChatService) GetChatStats(
+	ctx context.Context,
 	orgID uint64,
 	start, end time.Time,
-) (map[string]interface{}, error) {
-	args := m.Called(orgID, start, end)
-	stats := args.Get(0).(map[string]interface{})
+) (*domain.ChatStatsResponse, error) {
+	args := m.Called(ctx, orgID, start, end)
+	if args.Get(0) == nil {
+		if err := args.Error(1); err != nil {
+			return nil, fmt.Errorf("mock get chat stats error: %w", err)
+		}
+		return nil, nil
+	}
+	stats := args.Get(0).(*domain.ChatStatsResponse)
 	if err := args.Error(1); err != nil {
 		return nil, fmt.Errorf("mock get chat stats error: %w", err)
 	}
@@ -90,16 +103,16 @@ type MockMessageService struct {
 	mock.Mock
 }
 
-func (m *MockMessageService) CreateMessage(message *domain.Message) error {
-	args := m.Called(message)
+func (m *MockMessageService) CreateMessage(ctx context.Context, message *domain.Message) error {
+	args := m.Called(ctx, message)
 	if err := args.Error(0); err != nil {
 		return fmt.Errorf("mock create message error: %w", err)
 	}
 	return nil
 }
 
-func (m *MockMessageService) GetByID(id uint64) (*domain.Message, error) {
-	args := m.Called(id)
+func (m *MockMessageService) GetByID(ctx context.Context, id uint64) (*domain.Message, error) {
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		if err := args.Error(1); err != nil {
 			return nil, fmt.Errorf("mock get message by ID error: %w", err)
@@ -113,8 +126,11 @@ func (m *MockMessageService) GetByID(id uint64) (*domain.Message, error) {
 	return message, nil
 }
 
-func (m *MockMessageService) GetByChatID(chatID uint64) ([]domain.Message, error) {
-	args := m.Called(chatID)
+func (m *MockMessageService) GetByChatID(
+	ctx context.Context,
+	chatID uint64,
+) ([]domain.Message, error) {
+	args := m.Called(ctx, chatID)
 	messages := args.Get(0).([]domain.Message)
 	if err := args.Error(1); err != nil {
 		return nil, fmt.Errorf("mock get messages by chat ID error: %w", err)
@@ -123,10 +139,11 @@ func (m *MockMessageService) GetByChatID(chatID uint64) ([]domain.Message, error
 }
 
 func (m *MockMessageService) GetMessageStats(
+	ctx context.Context,
 	orgID uint64,
 	start, end time.Time,
 ) (map[string]interface{}, error) {
-	args := m.Called(orgID, start, end)
+	args := m.Called(ctx, orgID, start, end)
 	stats := args.Get(0).(map[string]interface{})
 	if err := args.Error(1); err != nil {
 		return nil, fmt.Errorf("mock get message stats error: %w", err)

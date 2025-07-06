@@ -106,7 +106,7 @@ func (h *ChatHandler) CreateChat(c *gin.Context) {
 	}
 
 	// Create the chat
-	if err := h.chatService.CreateChat(chat); err != nil {
+	if err := h.chatService.CreateChat(c.Request.Context(), chat); err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
 			gin.H{"error": "Failed to create chat: " + err.Error()},
@@ -157,7 +157,7 @@ func (h *ChatHandler) GetChat(c *gin.Context) {
 		return
 	}
 
-	chat, err := h.chatService.GetByID(id)
+	chat, err := h.chatService.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get chat: " + err.Error()})
 		return
@@ -205,7 +205,7 @@ func (h *ChatHandler) GetChat(c *gin.Context) {
 	// Optionally include messages
 	includeMessages := c.Query("include_messages") == "true"
 	if includeMessages {
-		messages, err := h.messageService.GetByChatID(chat.ID)
+		messages, err := h.messageService.GetByChatID(c.Request.Context(), chat.ID)
 		if err != nil {
 			c.JSON(
 				http.StatusInternalServerError,
@@ -256,7 +256,7 @@ func (h *ChatHandler) ListChats(c *gin.Context) {
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 
 	// Get chats
-	chats, err := h.chatService.GetByOrganizationID(orgIDValue, limit, offset)
+	chats, err := h.chatService.GetByOrganizationID(c.Request.Context(), orgIDValue, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list chats"})
 		return
@@ -332,7 +332,7 @@ func (h *ChatHandler) parseUpdateChatRequest(c *gin.Context) (uint64, *UpdateCha
 
 // validateChatAccess retrieves the chat and validates user permissions.
 func (h *ChatHandler) validateChatAccess(c *gin.Context, id uint64) (*domain.Chat, error) {
-	chat, err := h.chatService.GetByID(id)
+	chat, err := h.chatService.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get chat: " + err.Error()})
 		return nil, fmt.Errorf("failed to get chat: %w", err)
@@ -400,7 +400,7 @@ func (h *ChatHandler) applyChatUpdates(
 // saveChatUpdates saves the updated chat to the database.
 func (h *ChatHandler) saveChatUpdates(c *gin.Context, chat *domain.Chat) {
 	chat.UpdatedAt = time.Now()
-	if err := h.chatService.UpdateChat(chat); err != nil {
+	if err := h.chatService.UpdateChat(c.Request.Context(), chat); err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
 			gin.H{"error": "Failed to update chat: " + err.Error()},
@@ -456,7 +456,7 @@ func (h *ChatHandler) DeleteChat(c *gin.Context) {
 	}
 
 	// Get the chat
-	chat, err := h.chatService.GetByID(id)
+	chat, err := h.chatService.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get chat"})
 		return
@@ -491,7 +491,7 @@ func (h *ChatHandler) DeleteChat(c *gin.Context) {
 	}
 
 	// Delete the chat
-	if err := h.chatService.DeleteChat(id); err != nil {
+	if err := h.chatService.DeleteChat(c.Request.Context(), id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete chat"})
 		return
 	}

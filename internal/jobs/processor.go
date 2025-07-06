@@ -48,7 +48,7 @@ func (p *ExportProcessor) ProcessExport(ctx context.Context, task *asynq.Task) e
 		return err
 	}
 
-	chats, err := p.loadChatData(export)
+	chats, err := p.loadChatData(ctx, export)
 	if err != nil {
 		return err
 	}
@@ -81,14 +81,17 @@ func (p *ExportProcessor) parseAndInitializeExport(task *asynq.Task) (*domain.Ex
 }
 
 // loadChatData retrieves chats and messages for the export.
-func (p *ExportProcessor) loadChatData(export *domain.Export) ([]domain.Chat, error) {
-	chats, err := p.chatService.GetByOrganizationID(export.OrganizationID, 1000, 0)
+func (p *ExportProcessor) loadChatData(
+	ctx context.Context,
+	export *domain.Export,
+) ([]domain.Chat, error) {
+	chats, err := p.chatService.GetByOrganizationID(ctx, export.OrganizationID, 1000, 0)
 	if err != nil {
 		return nil, p.updateStatusAndReturnError(export.ID, "failed to get chats", err)
 	}
 
 	if export.Type == domain.ExportTypeAll || export.Type == domain.ExportTypeMessages {
-		if err := p.loadMessagesForChats(export.ID, chats); err != nil {
+		if err := p.loadMessagesForChats(ctx, export.ID, chats); err != nil {
 			return nil, err
 		}
 	}
@@ -97,9 +100,13 @@ func (p *ExportProcessor) loadChatData(export *domain.Export) ([]domain.Chat, er
 }
 
 // loadMessagesForChats loads messages for each chat.
-func (p *ExportProcessor) loadMessagesForChats(exportID uint64, chats []domain.Chat) error {
+func (p *ExportProcessor) loadMessagesForChats(
+	ctx context.Context,
+	exportID uint64,
+	chats []domain.Chat,
+) error {
 	for i := range chats {
-		messages, err := p.messageService.GetByChatID(chats[i].ID)
+		messages, err := p.messageService.GetByChatID(ctx, chats[i].ID)
 		if err != nil {
 			errorMsg := fmt.Sprintf("failed to get messages for chat %d", chats[i].ID)
 			return p.updateStatusAndReturnError(exportID, errorMsg, err)

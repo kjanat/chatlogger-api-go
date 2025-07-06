@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -31,7 +32,7 @@ func TestChatRepository_Create(t *testing.T) {
 	chat := fixtures.CreateTestChat(user.ID)
 	chat.OrganizationID = org.ID
 
-	err = repo.Create(chat)
+	err = repo.Create(context.Background(), chat)
 	testutils.RepositoryError(t, err, "ChatRepository", "Create")
 
 	// Comprehensive validation
@@ -86,11 +87,11 @@ func TestChatRepository_FindByID(t *testing.T) {
 
 	chat := fixtures.CreateTestChat(user.ID)
 	chat.OrganizationID = org.ID
-	err = repo.Create(chat)
+	err = repo.Create(context.Background(), chat)
 	testutils.SetupError(t, err, "creating test chat for FindByID test")
 
 	// Test finding existing chat
-	foundChat, err := repo.FindByID(chat.ID)
+	foundChat, err := repo.FindByID(context.Background(), chat.ID)
 	testutils.RepositoryError(t, err, "ChatRepository", "FindByID")
 	assert.NotNil(t, foundChat, "Found chat should not be nil")
 
@@ -117,12 +118,12 @@ func TestChatRepository_FindByID(t *testing.T) {
 	)
 
 	// Test finding non-existent chat
-	nonExistentChat, err := repo.FindByID(9999)
+	nonExistentChat, err := repo.FindByID(context.Background(), 9999)
 	testutils.RepositoryError(t, err, "ChatRepository", "FindByID for non-existent chat")
 	assert.Nil(t, nonExistentChat, "Non-existent chat should return nil")
 
 	// Test edge cases
-	zeroIDChat, err := repo.FindByID(0)
+	zeroIDChat, err := repo.FindByID(context.Background(), 0)
 	testutils.RepositoryError(t, err, "ChatRepository", "FindByID with zero ID")
 	assert.Nil(t, zeroIDChat, "Zero ID should return nil")
 }
@@ -147,26 +148,26 @@ func TestChatRepository_FindByOrganizationID(t *testing.T) {
 	chat1 := fixtures.CreateTestChat(user.ID)
 	chat1.OrganizationID = org.ID
 	chat1.Title = "Chat 1"
-	err = repo.Create(chat1)
+	err = repo.Create(context.Background(), chat1)
 	testutils.SetupError(t, err, "creating first test chat")
 
 	chat2 := fixtures.CreateTestChat(user.ID)
 	chat2.OrganizationID = org.ID
 	chat2.Title = "Chat 2"
-	err = repo.Create(chat2)
+	err = repo.Create(context.Background(), chat2)
 	testutils.SetupError(t, err, "creating second test chat")
 
 	// Test finding chats by organization ID
-	chats, err := repo.FindByOrganizationID(org.ID, 10, 0)
+	chats, err := repo.FindByOrganizationID(context.Background(), org.ID, 10, 0)
 	testutils.RepositoryError(t, err, "ChatRepository", "FindByOrganizationID")
 	assert.Len(t, chats, 2)
 
 	// Test pagination
-	chats, err = repo.FindByOrganizationID(org.ID, 1, 0)
+	chats, err = repo.FindByOrganizationID(context.Background(), org.ID, 1, 0)
 	testutils.RepositoryError(t, err, "ChatRepository", "FindByOrganizationID with limit 1")
 	assert.Len(t, chats, 1)
 
-	chats, err = repo.FindByOrganizationID(org.ID, 1, 1)
+	chats, err = repo.FindByOrganizationID(context.Background(), org.ID, 1, 1)
 	testutils.RepositoryError(t, err, "ChatRepository", "FindByOrganizationID with offset 1")
 	assert.Len(t, chats, 1)
 }
@@ -196,26 +197,26 @@ func TestChatRepository_FindByUserID(t *testing.T) {
 	// Create chats for user1
 	chat1 := fixtures.CreateTestChat(user1.ID)
 	chat1.OrganizationID = org.ID
-	err = repo.Create(chat1)
+	err = repo.Create(context.Background(), chat1)
 	testutils.SetupError(t, err, "creating chat1 for user1")
 
 	chat2 := fixtures.CreateTestChat(user1.ID)
 	chat2.OrganizationID = org.ID
-	err = repo.Create(chat2)
+	err = repo.Create(context.Background(), chat2)
 	testutils.SetupError(t, err, "creating chat2 for user1")
 
 	// Create chat for user2
 	chat3 := fixtures.CreateTestChat(user2.ID)
 	chat3.OrganizationID = org.ID
-	err = repo.Create(chat3)
+	err = repo.Create(context.Background(), chat3)
 	testutils.SetupError(t, err, "creating chat for user2")
 
 	// Test finding chats by user ID
-	user1Chats, err := repo.FindByUserID(user1.ID, 10, 0)
+	user1Chats, err := repo.FindByUserID(context.Background(), user1.ID, 10, 0)
 	testutils.RepositoryError(t, err, "ChatRepository", "FindByUserID for user1")
 	assert.Len(t, user1Chats, 2)
 
-	user2Chats, err := repo.FindByUserID(user2.ID, 10, 0)
+	user2Chats, err := repo.FindByUserID(context.Background(), user2.ID, 10, 0)
 	testutils.RepositoryError(t, err, "ChatRepository", "FindByUserID for user2")
 	assert.Len(t, user2Chats, 1)
 }
@@ -238,16 +239,16 @@ func TestChatRepository_Update(t *testing.T) {
 
 	chat := fixtures.CreateTestChat(user.ID)
 	chat.OrganizationID = org.ID
-	err = repo.Create(chat)
+	err = repo.Create(context.Background(), chat)
 	testutils.SetupError(t, err, "creating test chat for update test")
 
 	// Update chat
 	chat.Title = "Updated Title"
-	err = repo.Update(chat)
+	err = repo.Update(context.Background(), chat)
 	testutils.RepositoryError(t, err, "ChatRepository", "Update")
 
 	// Verify update
-	updatedChat, err := repo.FindByID(chat.ID)
+	updatedChat, err := repo.FindByID(context.Background(), chat.ID)
 	testutils.RepositoryError(t, err, "ChatRepository", "FindByID after update")
 	assert.Equal(t, "Updated Title", updatedChat.Title)
 }
@@ -270,15 +271,15 @@ func TestChatRepository_Delete(t *testing.T) {
 
 	chat := fixtures.CreateTestChat(user.ID)
 	chat.OrganizationID = org.ID
-	err = repo.Create(chat)
+	err = repo.Create(context.Background(), chat)
 	testutils.SetupError(t, err, "creating test chat for delete test")
 
 	// Delete chat
-	err = repo.Delete(chat.ID)
+	err = repo.Delete(context.Background(), chat.ID)
 	testutils.RepositoryError(t, err, "ChatRepository", "Delete")
 
 	// Verify deletion
-	deletedChat, err := repo.FindByID(chat.ID)
+	deletedChat, err := repo.FindByID(context.Background(), chat.ID)
 	testutils.RepositoryError(t, err, "ChatRepository", "FindByID after delete")
 	assert.Nil(t, deletedChat)
 }
@@ -307,22 +308,32 @@ func TestChatRepository_CountByOrgIDAndDateRange(t *testing.T) {
 	chat1 := fixtures.CreateTestChat(user.ID)
 	chat1.OrganizationID = org.ID
 	chat1.CreatedAt = yesterday
-	err = repo.Create(chat1)
+	err = repo.Create(context.Background(), chat1)
 	testutils.SetupError(t, err, "creating chat1 with yesterday timestamp")
 
 	chat2 := fixtures.CreateTestChat(user.ID)
 	chat2.OrganizationID = org.ID
 	chat2.CreatedAt = now
-	err = repo.Create(chat2)
+	err = repo.Create(context.Background(), chat2)
 	testutils.SetupError(t, err, "creating chat2 with current timestamp")
 
 	// Count chats in range
-	count, err := repo.CountByOrgIDAndDateRange(org.ID, yesterday.Add(-time.Hour), tomorrow)
+	count, err := repo.CountByOrgIDAndDateRange(
+		context.Background(),
+		org.ID,
+		yesterday.Add(-time.Hour),
+		tomorrow,
+	)
 	testutils.RepositoryError(t, err, "ChatRepository", "CountByOrgIDAndDateRange wide range")
 	assert.Equal(t, int64(2), count)
 
 	// Count chats in narrow range
-	count, err = repo.CountByOrgIDAndDateRange(org.ID, now.Add(-time.Hour), now.Add(time.Hour))
+	count, err = repo.CountByOrgIDAndDateRange(
+		context.Background(),
+		org.ID,
+		now.Add(-time.Hour),
+		now.Add(time.Hour),
+	)
 	testutils.RepositoryError(t, err, "ChatRepository", "CountByOrgIDAndDateRange narrow range")
 	assert.Equal(t, int64(1), count)
 }
@@ -345,11 +356,11 @@ func TestChatRepository_GetTagStats(t *testing.T) {
 
 	chat := fixtures.CreateTestChat(user.ID)
 	chat.OrganizationID = org.ID
-	err = repo.Create(chat)
+	err = repo.Create(context.Background(), chat)
 	testutils.SetupError(t, err, "creating test chat for tag stats test")
 
 	// Test getting tag stats (simplified implementation)
-	stats, err := repo.GetTagStats(org.ID)
+	stats, err := repo.GetTagStats(context.Background(), org.ID)
 	testutils.RepositoryError(t, err, "ChatRepository", "GetTagStats")
 	assert.NotNil(t, stats)
 }

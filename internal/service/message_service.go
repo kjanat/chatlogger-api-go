@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -20,7 +21,7 @@ func NewMessageService(messageRepo domain.MessageRepository) domain.MessageServi
 }
 
 // CreateMessage creates a new message.
-func (s *MessageService) CreateMessage(message *domain.Message) error {
+func (s *MessageService) CreateMessage(ctx context.Context, message *domain.Message) error {
 	// Validate the message
 	if err := message.Validate(); err != nil {
 		return fmt.Errorf("invalid message: %w", err)
@@ -30,15 +31,15 @@ func (s *MessageService) CreateMessage(message *domain.Message) error {
 	message.CreatedAt = time.Now()
 
 	// Create the message
-	if err := s.messageRepo.Create(message); err != nil {
+	if err := s.messageRepo.Create(ctx, message); err != nil {
 		return fmt.Errorf("failed to create message: %w", err)
 	}
 	return nil
 }
 
 // GetByID gets a message by ID.
-func (s *MessageService) GetByID(id uint64) (*domain.Message, error) {
-	message, err := s.messageRepo.FindByID(id)
+func (s *MessageService) GetByID(ctx context.Context, id uint64) (*domain.Message, error) {
+	message, err := s.messageRepo.FindByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find message by ID: %w", err)
 	}
@@ -46,8 +47,8 @@ func (s *MessageService) GetByID(id uint64) (*domain.Message, error) {
 }
 
 // GetByChatID gets messages by chat ID.
-func (s *MessageService) GetByChatID(chatID uint64) ([]domain.Message, error) {
-	messages, err := s.messageRepo.FindByChatID(chatID)
+func (s *MessageService) GetByChatID(ctx context.Context, chatID uint64) ([]domain.Message, error) {
+	messages, err := s.messageRepo.FindByChatID(ctx, chatID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find messages by chat ID: %w", err)
 	}
@@ -56,17 +57,18 @@ func (s *MessageService) GetByChatID(chatID uint64) ([]domain.Message, error) {
 
 // GetMessageStats gets message statistics for an organization.
 func (s *MessageService) GetMessageStats(
+	ctx context.Context,
 	orgID uint64,
 	start, end time.Time,
 ) (map[string]interface{}, error) {
 	// Get message count in date range
-	messageCount, err := s.messageRepo.CountByOrgIDAndDateRange(orgID, start, end)
+	messageCount, err := s.messageRepo.CountByOrgIDAndDateRange(ctx, orgID, start, end)
 	if err != nil {
 		return nil, fmt.Errorf("error getting message count: %w", err)
 	}
 
 	// Get role statistics
-	roleStats, err := s.messageRepo.GetRoleStats(orgID)
+	roleStats, err := s.messageRepo.GetRoleStats(ctx, orgID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting role stats: %w", err)
 	}

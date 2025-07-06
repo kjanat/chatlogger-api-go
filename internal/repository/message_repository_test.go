@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -35,7 +36,7 @@ func TestMessageRepository_Create(t *testing.T) {
 	// Create test message
 	message := fixtures.CreateTestMessage(chat.ID)
 
-	err = repo.Create(message)
+	err = repo.Create(context.Background(), message)
 	assert.NoError(t, err)
 	assert.NotZero(t, message.ID)
 	assert.Equal(t, chat.ID, message.ChatID)
@@ -63,11 +64,11 @@ func TestMessageRepository_FindByID(t *testing.T) {
 	require.NoError(t, err)
 
 	message := fixtures.CreateTestMessage(chat.ID)
-	err = repo.Create(message)
+	err = repo.Create(context.Background(), message)
 	require.NoError(t, err)
 
 	// Test finding existing message
-	foundMessage, err := repo.FindByID(message.ID)
+	foundMessage, err := repo.FindByID(context.Background(), message.ID)
 	assert.NoError(t, err)
 	assert.NotNil(t, foundMessage)
 	assert.Equal(t, message.ID, foundMessage.ID)
@@ -75,7 +76,7 @@ func TestMessageRepository_FindByID(t *testing.T) {
 	assert.Equal(t, message.Role, foundMessage.Role)
 
 	// Test finding non-existent message
-	nonExistentMessage, err := repo.FindByID(9999)
+	nonExistentMessage, err := repo.FindByID(context.Background(), 9999)
 	assert.NoError(t, err)
 	assert.Nil(t, nonExistentMessage)
 }
@@ -113,24 +114,24 @@ func TestMessageRepository_FindByChatID(t *testing.T) {
 	message1.Content = "First message"
 	message1.Role = domain.MessageRoleUser
 	message1.CreatedAt = time.Now().Add(-2 * time.Hour)
-	err = repo.Create(message1)
+	err = repo.Create(context.Background(), message1)
 	require.NoError(t, err)
 
 	message2 := fixtures.CreateTestMessage(chat1.ID)
 	message2.Content = "Second message"
 	message2.Role = domain.MessageRoleAssistant
 	message2.CreatedAt = time.Now().Add(-1 * time.Hour)
-	err = repo.Create(message2)
+	err = repo.Create(context.Background(), message2)
 	require.NoError(t, err)
 
 	// Create message for chat2
 	message3 := fixtures.CreateTestMessage(chat2.ID)
 	message3.Content = "Chat 2 message"
-	err = repo.Create(message3)
+	err = repo.Create(context.Background(), message3)
 	require.NoError(t, err)
 
 	// Test finding messages by chat ID
-	chat1Messages, err := repo.FindByChatID(chat1.ID)
+	chat1Messages, err := repo.FindByChatID(context.Background(), chat1.ID)
 	assert.NoError(t, err)
 	assert.Len(t, chat1Messages, 2)
 
@@ -138,7 +139,7 @@ func TestMessageRepository_FindByChatID(t *testing.T) {
 	assert.Equal(t, "First message", chat1Messages[0].Content)
 	assert.Equal(t, "Second message", chat1Messages[1].Content)
 
-	chat2Messages, err := repo.FindByChatID(chat2.ID)
+	chat2Messages, err := repo.FindByChatID(context.Background(), chat2.ID)
 	assert.NoError(t, err)
 	assert.Len(t, chat2Messages, 1)
 	assert.Equal(t, "Chat 2 message", chat2Messages[0].Content)
@@ -172,26 +173,36 @@ func TestMessageRepository_CountByOrgIDAndDateRange(t *testing.T) {
 
 	message1 := fixtures.CreateTestMessage(chat.ID)
 	message1.CreatedAt = yesterday
-	err = repo.Create(message1)
+	err = repo.Create(context.Background(), message1)
 	require.NoError(t, err)
 
 	message2 := fixtures.CreateTestMessage(chat.ID)
 	message2.CreatedAt = now
-	err = repo.Create(message2)
+	err = repo.Create(context.Background(), message2)
 	require.NoError(t, err)
 
 	message3 := fixtures.CreateTestMessage(chat.ID)
 	message3.CreatedAt = now.Add(1 * time.Hour)
-	err = repo.Create(message3)
+	err = repo.Create(context.Background(), message3)
 	require.NoError(t, err)
 
 	// Count messages in range
-	count, err := repo.CountByOrgIDAndDateRange(org.ID, yesterday.Add(-time.Hour), tomorrow)
+	count, err := repo.CountByOrgIDAndDateRange(
+		context.Background(),
+		org.ID,
+		yesterday.Add(-time.Hour),
+		tomorrow,
+	)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(3), count)
 
 	// Count messages in narrow range
-	count, err = repo.CountByOrgIDAndDateRange(org.ID, now.Add(-time.Hour), now.Add(30*time.Minute))
+	count, err = repo.CountByOrgIDAndDateRange(
+		context.Background(),
+		org.ID,
+		now.Add(-time.Hour),
+		now.Add(30*time.Minute),
+	)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), count)
 }
@@ -220,26 +231,26 @@ func TestMessageRepository_GetRoleStats(t *testing.T) {
 	// Create messages with different roles
 	userMessage1 := fixtures.CreateTestMessage(chat.ID)
 	userMessage1.Role = domain.MessageRoleUser
-	err = repo.Create(userMessage1)
+	err = repo.Create(context.Background(), userMessage1)
 	require.NoError(t, err)
 
 	userMessage2 := fixtures.CreateTestMessage(chat.ID)
 	userMessage2.Role = domain.MessageRoleUser
-	err = repo.Create(userMessage2)
+	err = repo.Create(context.Background(), userMessage2)
 	require.NoError(t, err)
 
 	assistantMessage := fixtures.CreateTestMessage(chat.ID)
 	assistantMessage.Role = domain.MessageRoleAssistant
-	err = repo.Create(assistantMessage)
+	err = repo.Create(context.Background(), assistantMessage)
 	require.NoError(t, err)
 
 	systemMessage := fixtures.CreateTestMessage(chat.ID)
 	systemMessage.Role = domain.MessageRoleSystem
-	err = repo.Create(systemMessage)
+	err = repo.Create(context.Background(), systemMessage)
 	require.NoError(t, err)
 
 	// Get role statistics
-	stats, err := repo.GetRoleStats(org.ID)
+	stats, err := repo.GetRoleStats(context.Background(), org.ID)
 	assert.NoError(t, err)
 	assert.NotNil(t, stats)
 
@@ -285,7 +296,7 @@ func TestMessageRepository_MessageValidation(t *testing.T) {
 		message.Role = role
 		message.Content = "Test content for " + string(role)
 
-		err = repo.Create(message)
+		err = repo.Create(context.Background(), message)
 		assert.NoError(t, err, "Should be able to create message with role: %s", role)
 	}
 }

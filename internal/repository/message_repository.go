@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -19,15 +20,15 @@ func NewMessageRepository(db *Database) domain.MessageRepository {
 }
 
 // Create creates a new message.
-func (r *MessageRepo) Create(message *domain.Message) error {
-	return r.db.Create(message).Error
+func (r *MessageRepo) Create(ctx context.Context, message *domain.Message) error {
+	return r.db.WithContext(ctx).Create(message).Error
 }
 
 // FindByID finds a message by ID.
-func (r *MessageRepo) FindByID(id uint64) (*domain.Message, error) {
+func (r *MessageRepo) FindByID(ctx context.Context, id uint64) (*domain.Message, error) {
 	var message domain.Message
 
-	err := r.db.First(&message, id).Error
+	err := r.db.WithContext(ctx).First(&message, id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -40,17 +41,25 @@ func (r *MessageRepo) FindByID(id uint64) (*domain.Message, error) {
 }
 
 // FindByChatID finds messages by chat ID.
-func (r *MessageRepo) FindByChatID(chatID uint64) ([]domain.Message, error) {
+func (r *MessageRepo) FindByChatID(ctx context.Context, chatID uint64) ([]domain.Message, error) {
 	var messages []domain.Message
-	err := r.db.Where("chat_id = ?", chatID).Order("created_at ASC").Find(&messages).Error
+	err := r.db.WithContext(ctx).
+		Where("chat_id = ?", chatID).
+		Order("created_at ASC").
+		Find(&messages).
+		Error
 
 	return messages, err
 }
 
 // CountByOrgIDAndDateRange counts messages in a date range for an organization.
-func (r *MessageRepo) CountByOrgIDAndDateRange(orgID uint64, start, end time.Time) (int64, error) {
+func (r *MessageRepo) CountByOrgIDAndDateRange(
+	ctx context.Context,
+	orgID uint64,
+	start, end time.Time,
+) (int64, error) {
 	var count int64
-	err := r.db.Model(&domain.Message{}).
+	err := r.db.WithContext(ctx).Model(&domain.Message{}).
 		Joins("JOIN chats ON messages.chat_id = chats.id").
 		Where("chats.organization_id = ? AND messages.created_at BETWEEN ? AND ?", orgID, start, end).
 		Count(&count).Error
@@ -59,7 +68,10 @@ func (r *MessageRepo) CountByOrgIDAndDateRange(orgID uint64, start, end time.Tim
 }
 
 // GetRoleStats gets statistics for message roles in an organization.
-func (r *MessageRepo) GetRoleStats(orgID uint64) (map[domain.MessageRole]int64, error) {
+func (r *MessageRepo) GetRoleStats(
+	ctx context.Context,
+	orgID uint64,
+) (map[domain.MessageRole]int64, error) {
 	type Result struct {
 		Role  domain.MessageRole
 		Count int64
@@ -67,7 +79,7 @@ func (r *MessageRepo) GetRoleStats(orgID uint64) (map[domain.MessageRole]int64, 
 
 	var results []Result
 
-	err := r.db.Model(&domain.Message{}).
+	err := r.db.WithContext(ctx).Model(&domain.Message{}).
 		Select("messages.role, COUNT(*) as count").
 		Joins("JOIN chats ON messages.chat_id = chats.id").
 		Where("chats.organization_id = ?", orgID).

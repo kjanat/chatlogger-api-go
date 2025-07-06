@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -28,7 +29,7 @@ func TestChatService_CreateChat(t *testing.T) {
 		Metadata:       `{"test": true}`,
 	}
 
-	err := service.CreateChat(chat)
+	err := service.CreateChat(context.Background(), chat)
 
 	testutils.ServiceError(t, err, "ChatService", "CreateChat")
 	assert.NotZero(t, chat.CreatedAt)
@@ -46,7 +47,7 @@ func TestChatService_CreateChat_RepositoryError(t *testing.T) {
 		Build()
 	service := NewChatService(mockRepo)
 
-	err := service.CreateChat(chat)
+	err := service.CreateChat(context.Background(), chat)
 
 	testutils.ExpectErrorWithMessage(t, err, "database error", "CreateChat with repository error")
 	mockRepo.AssertExpectations(t)
@@ -62,7 +63,7 @@ func TestChatService_GetByID(t *testing.T) {
 		Build()
 	service := NewChatService(mockRepo)
 
-	chat, err := service.GetByID(1)
+	chat, err := service.GetByID(context.Background(), 1)
 
 	testutils.ServiceError(t, err, "ChatService", "GetByID")
 	assert.Equal(t, expectedChat, chat)
@@ -75,7 +76,7 @@ func TestChatService_GetByID_NotFound(t *testing.T) {
 	mockRepo := scenario.ChatNotFoundScenario()
 	service := NewChatService(mockRepo)
 
-	chat, err := service.GetByID(999)
+	chat, err := service.GetByID(context.Background(), 999)
 
 	assert.NoError(t, err)
 	assert.Nil(t, chat)
@@ -94,7 +95,7 @@ func TestChatService_GetByOrganizationID(t *testing.T) {
 		Build()
 	service := NewChatService(mockRepo)
 
-	chats, err := service.GetByOrganizationID(1, 10, 0)
+	chats, err := service.GetByOrganizationID(context.Background(), 1, 10, 0)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expectedChats, chats)
@@ -109,9 +110,9 @@ func TestChatService_GetByUserID(t *testing.T) {
 		*fixtures.CreateTestChat(1),
 	}
 
-	mockRepo.On("FindByUserID", uint64(1), 5, 0).Return(expectedChats, nil)
+	mockRepo.On("FindByUserID", mock.Anything, uint64(1), 5, 0).Return(expectedChats, nil)
 
-	chats, err := service.GetByUserID(1, 5, 0)
+	chats, err := service.GetByUserID(context.Background(), 1, 5, 0)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expectedChats, chats)
@@ -138,7 +139,7 @@ func TestChatService_UpdateChat(t *testing.T) {
 		Build()
 	service := NewChatService(mockRepo)
 
-	err := service.UpdateChat(chatToUpdate)
+	err := service.UpdateChat(context.Background(), chatToUpdate)
 
 	assert.NoError(t, err)
 	assert.NotZero(t, chatToUpdate.UpdatedAt)
@@ -152,9 +153,9 @@ func TestChatService_UpdateChat_NotFound(t *testing.T) {
 	chatToUpdate := fixtures.CreateTestChat(1)
 	chatToUpdate.ID = 999
 
-	mockRepo.On("FindByID", uint64(999)).Return((*domain.Chat)(nil), nil)
+	mockRepo.On("FindByID", mock.Anything, uint64(999)).Return((*domain.Chat)(nil), nil)
 
-	err := service.UpdateChat(chatToUpdate)
+	err := service.UpdateChat(context.Background(), chatToUpdate)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "chat not found")
@@ -169,9 +170,9 @@ func TestChatService_UpdateChat_FindError(t *testing.T) {
 	chatToUpdate.ID = 1
 	expectedError := errors.New("database error")
 
-	mockRepo.On("FindByID", uint64(1)).Return((*domain.Chat)(nil), expectedError)
+	mockRepo.On("FindByID", mock.Anything, uint64(1)).Return((*domain.Chat)(nil), expectedError)
 
-	err := service.UpdateChat(chatToUpdate)
+	err := service.UpdateChat(context.Background(), chatToUpdate)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error finding chat")
@@ -182,9 +183,9 @@ func TestChatService_DeleteChat(t *testing.T) {
 	mockRepo := &mocks.MockChatRepository{}
 	service := NewChatService(mockRepo)
 
-	mockRepo.On("Delete", uint64(1)).Return(nil)
+	mockRepo.On("Delete", mock.Anything, uint64(1)).Return(nil)
 
-	err := service.DeleteChat(1)
+	err := service.DeleteChat(context.Background(), 1)
 
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
@@ -195,9 +196,9 @@ func TestChatService_DeleteChat_Error(t *testing.T) {
 	service := NewChatService(mockRepo)
 
 	expectedError := errors.New("delete error")
-	mockRepo.On("Delete", uint64(1)).Return(expectedError)
+	mockRepo.On("Delete", mock.Anything, uint64(1)).Return(expectedError)
 
-	err := service.DeleteChat(1)
+	err := service.DeleteChat(context.Background(), 1)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to delete chat")
@@ -224,16 +225,14 @@ func TestChatService_GetChatStats(t *testing.T) {
 		Build()
 	service := NewChatService(mockRepo)
 
-	stats, err := service.GetChatStats(orgID, start, end)
+	stats, err := service.GetChatStats(context.Background(), orgID, start, end)
 
 	testutils.ServiceError(t, err, "ChatService", "GetChatStats")
-	assert.Equal(t, expectedChatCount, stats["total_chats"])
-	assert.Equal(t, expectedTagStats, stats["tag_stats"])
-
-	dateRange, ok := stats["date_range"].(map[string]string)
-	assert.True(t, ok, "date_range should be a map[string]string")
-	assert.NotEmpty(t, dateRange["start"])
-	assert.NotEmpty(t, dateRange["end"])
+	assert.NotNil(t, stats)
+	assert.Equal(t, expectedChatCount, stats.TotalChats)
+	assert.Equal(t, expectedTagStats, stats.TagStats)
+	assert.NotEmpty(t, stats.DateRange.Start)
+	assert.NotEmpty(t, stats.DateRange.End)
 
 	mockRepo.AssertExpectations(t)
 }
@@ -247,10 +246,10 @@ func TestChatService_GetChatStats_CountError(t *testing.T) {
 	end := time.Now()
 	expectedError := errors.New("count error")
 
-	mockRepo.On("CountByOrgIDAndDateRange", orgID, mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).
+	mockRepo.On("CountByOrgIDAndDateRange", mock.Anything, orgID, mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).
 		Return(int64(0), expectedError)
 
-	stats, err := service.GetChatStats(orgID, start, end)
+	stats, err := service.GetChatStats(context.Background(), orgID, start, end)
 
 	assert.Error(t, err)
 	assert.Nil(t, stats)
@@ -267,11 +266,11 @@ func TestChatService_GetChatStats_TagStatsError(t *testing.T) {
 	end := time.Now()
 	expectedError := errors.New("tag stats error")
 
-	mockRepo.On("CountByOrgIDAndDateRange", orgID, mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).
+	mockRepo.On("CountByOrgIDAndDateRange", mock.Anything, orgID, mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).
 		Return(int64(10), nil)
-	mockRepo.On("GetTagStats", orgID).Return(map[string]int64(nil), expectedError)
+	mockRepo.On("GetTagStats", mock.Anything, orgID).Return(map[string]int64(nil), expectedError)
 
-	stats, err := service.GetChatStats(orgID, start, end)
+	stats, err := service.GetChatStats(context.Background(), orgID, start, end)
 
 	assert.Error(t, err)
 	assert.Nil(t, stats)
@@ -291,18 +290,18 @@ func TestChatService_Integration_BuilderPattern(t *testing.T) {
 	service := NewChatService(mockRepo)
 
 	// Test create operation
-	err := service.CreateChat(setup.Chat)
+	err := service.CreateChat(context.Background(), setup.Chat)
 	assert.NoError(t, err)
 
 	// Test get operation
-	chat, err := service.GetByID(setup.Chat.ID)
+	chat, err := service.GetByID(context.Background(), setup.Chat.ID)
 	assert.NoError(t, err)
 	assert.NotNil(t, chat)
 	assert.Equal(t, setup.Chat.ID, chat.ID)
 	assert.Equal(t, setup.Chat.Title, chat.Title)
 
 	// Test list operation
-	chats, err := service.GetByOrganizationID(setup.Org.ID, 10, 0)
+	chats, err := service.GetByOrganizationID(context.Background(), setup.Org.ID, 10, 0)
 	assert.NoError(t, err)
 	assert.Len(t, chats, 1)
 	assert.Equal(t, setup.Chat.ID, chats[0].ID)

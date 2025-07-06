@@ -75,7 +75,7 @@ func (h *MessageHandler) CreateMessage(c *gin.Context) {
 	}
 
 	// Get the chat to validate ownership
-	chat, err := h.chatService.GetByID(id)
+	chat, err := h.chatService.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get chat: " + err.Error()})
 
@@ -133,7 +133,7 @@ func (h *MessageHandler) CreateMessage(c *gin.Context) {
 	}
 
 	// Create the message
-	if err := h.messageService.CreateMessage(message); err != nil {
+	if err := h.messageService.CreateMessage(c.Request.Context(), message); err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
 			gin.H{"error": "Failed to create message: " + err.Error()},
@@ -186,7 +186,7 @@ func (h *MessageHandler) GetMessages(c *gin.Context) {
 	}
 
 	// Get the chat to validate ownership
-	chat, err := h.chatService.GetByID(id)
+	chat, err := h.chatService.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get chat: " + err.Error()})
 
@@ -219,7 +219,7 @@ func (h *MessageHandler) GetMessages(c *gin.Context) {
 	}
 
 	// Get messages for the chat
-	messages, err := h.messageService.GetByChatID(chat.ID)
+	messages, err := h.messageService.GetByChatID(c.Request.Context(), chat.ID)
 	if err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
@@ -310,7 +310,7 @@ func (h *MessageHandler) GetMessageStats(c *gin.Context) {
 	}
 
 	// Get message statistics
-	stats, err := h.messageService.GetMessageStats(orgIDValue, start, end)
+	stats, err := h.messageService.GetMessageStats(c.Request.Context(), orgIDValue, start, end)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get message statistics"})
 

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -17,13 +18,14 @@ func BenchmarkChatService_CreateChat(b *testing.B) {
 	service := NewChatService(mockRepo)
 
 	// Setup mock to always succeed quickly
-	mockRepo.On("Create", mock.AnythingOfType("*domain.Chat")).Return(nil)
+	mockRepo.On("Create", mock.AnythingOfType("context.Context"), mock.AnythingOfType("*domain.Chat")).
+		Return(nil)
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			chat := fixtures.CreateTestChat(1)
-			err := service.CreateChat(chat)
+			err := service.CreateChat(context.Background(), chat)
 			if err != nil {
 				b.Fatalf("Failed to create chat: %v", err)
 			}
@@ -40,12 +42,13 @@ func BenchmarkChatService_GetByID(b *testing.B) {
 	testChat.ID = 1
 
 	// Setup mock to return pre-created chat
-	mockRepo.On("FindByID", mock.AnythingOfType("uint64")).Return(testChat, nil)
+	mockRepo.On("FindByID", mock.AnythingOfType("context.Context"), mock.AnythingOfType("uint64")).
+		Return(testChat, nil)
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_, err := service.GetByID(1)
+			_, err := service.GetByID(context.Background(), 1)
 			if err != nil {
 				b.Fatalf("Failed to get chat: %v", err)
 			}
@@ -67,12 +70,13 @@ func BenchmarkChatService_GetByOrganizationID(b *testing.B) {
 
 	b.Run("SmallResult", func(b *testing.B) {
 		smallChats := testChats[:1]
-		mockRepo.On("FindByOrganizationID", uint64(1), 10, 0).Return(smallChats, nil)
+		mockRepo.On("FindByOrganizationID", mock.AnythingOfType("context.Context"), uint64(1), 10, 0).
+			Return(smallChats, nil)
 
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				_, err := service.GetByOrganizationID(1, 10, 0)
+				_, err := service.GetByOrganizationID(context.Background(), 1, 10, 0)
 				if err != nil {
 					b.Fatalf("Failed to get chats: %v", err)
 				}
@@ -86,12 +90,13 @@ func BenchmarkChatService_GetByOrganizationID(b *testing.B) {
 			mediumChats[i] = *fixtures.CreateTestChat(1)
 		}
 
-		mockRepo.On("FindByOrganizationID", uint64(2), 50, 0).Return(mediumChats, nil)
+		mockRepo.On("FindByOrganizationID", mock.AnythingOfType("context.Context"), uint64(2), 50, 0).
+			Return(mediumChats, nil)
 
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				_, err := service.GetByOrganizationID(2, 50, 0)
+				_, err := service.GetByOrganizationID(context.Background(), 2, 50, 0)
 				if err != nil {
 					b.Fatalf("Failed to get chats: %v", err)
 				}
@@ -105,12 +110,13 @@ func BenchmarkChatService_GetByOrganizationID(b *testing.B) {
 			largeChats[i] = *fixtures.CreateTestChat(1)
 		}
 
-		mockRepo.On("FindByOrganizationID", uint64(3), 200, 0).Return(largeChats, nil)
+		mockRepo.On("FindByOrganizationID", mock.AnythingOfType("context.Context"), uint64(3), 200, 0).
+			Return(largeChats, nil)
 
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				_, err := service.GetByOrganizationID(3, 200, 0)
+				_, err := service.GetByOrganizationID(context.Background(), 3, 200, 0)
 				if err != nil {
 					b.Fatalf("Failed to get chats: %v", err)
 				}
@@ -128,8 +134,10 @@ func BenchmarkChatService_UpdateChat(b *testing.B) {
 	existingChat.ID = 1
 
 	// Setup mocks
-	mockRepo.On("FindByID", uint64(1)).Return(existingChat, nil)
-	mockRepo.On("Update", mock.AnythingOfType("*domain.Chat")).Return(nil)
+	mockRepo.On("FindByID", mock.AnythingOfType("context.Context"), uint64(1)).
+		Return(existingChat, nil)
+	mockRepo.On("Update", mock.AnythingOfType("context.Context"), mock.AnythingOfType("*domain.Chat")).
+		Return(nil)
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
@@ -143,7 +151,7 @@ func BenchmarkChatService_UpdateChat(b *testing.B) {
 				Metadata:       `{"updated": true}`,
 			}
 
-			err := service.UpdateChat(chatToUpdate)
+			err := service.UpdateChat(context.Background(), chatToUpdate)
 			if err != nil {
 				b.Fatalf("Failed to update chat: %v", err)
 			}
@@ -157,15 +165,17 @@ func BenchmarkChatService_GetChatStats(b *testing.B) {
 	service := NewChatService(mockRepo)
 
 	// Setup mock responses for stats
-	mockRepo.On("CountByOrgIDAndDateRange", mock.AnythingOfType("uint64"),
-		mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(int64(1000), nil)
+	mockRepo.On("CountByOrgIDAndDateRange", mock.AnythingOfType("context.Context"), mock.AnythingOfType("uint64"),
+		mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).
+		Return(int64(1000), nil)
 
 	tagStats := map[string]int64{
 		"support":   500,
 		"technical": 300,
 		"general":   200,
 	}
-	mockRepo.On("GetTagStats", mock.AnythingOfType("uint64")).Return(tagStats, nil)
+	mockRepo.On("GetTagStats", mock.AnythingOfType("context.Context"), mock.AnythingOfType("uint64")).
+		Return(tagStats, nil)
 
 	start := time.Now().AddDate(0, 0, -7)
 	end := time.Now()
@@ -173,7 +183,7 @@ func BenchmarkChatService_GetChatStats(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_, err := service.GetChatStats(1, start, end)
+			_, err := service.GetChatStats(context.Background(), 1, start, end)
 			if err != nil {
 				b.Fatalf("Failed to get chat stats: %v", err)
 			}
@@ -263,10 +273,13 @@ func BenchmarkConcurrentServiceCalls(b *testing.B) {
 	testUser := fixtures.CreateTestUser(1)
 	testUser.ID = 1
 
-	mockChatRepo.On("Create", mock.AnythingOfType("*domain.Chat")).Return(nil)
-	mockChatRepo.On("FindByID", mock.AnythingOfType("uint64")).Return(testChat, nil)
+	mockChatRepo.On("Create", mock.AnythingOfType("context.Context"), mock.AnythingOfType("*domain.Chat")).
+		Return(nil)
+	mockChatRepo.On("FindByID", mock.AnythingOfType("context.Context"), mock.AnythingOfType("uint64")).
+		Return(testChat, nil)
 	mockChatRepo.On(
 		"FindByOrganizationID",
+		mock.AnythingOfType("context.Context"),
 		mock.AnythingOfType("uint64"),
 		mock.AnythingOfType(
 			"int",
@@ -292,11 +305,11 @@ func BenchmarkConcurrentServiceCalls(b *testing.B) {
 				switch i % 5 {
 				case 0:
 					chat := fixtures.CreateTestChat(1)
-					_ = chatService.CreateChat(chat)
+					_ = chatService.CreateChat(context.Background(), chat)
 				case 1:
-					_, _ = chatService.GetByID(1)
+					_, _ = chatService.GetByID(context.Background(), 1)
 				case 2:
-					_, _ = chatService.GetByOrganizationID(1, 10, 0)
+					_, _ = chatService.GetByOrganizationID(context.Background(), 1, 10, 0)
 				case 3:
 					_, _ = userService.GetByID(1)
 				case 4:
@@ -317,7 +330,7 @@ func BenchmarkServiceLatency(b *testing.B) {
 	testChat.ID = 1
 
 	// Add artificial delay to simulate database latency
-	mockRepo.On("FindByID", mock.AnythingOfType("uint64")).
+	mockRepo.On("FindByID", mock.AnythingOfType("context.Context"), mock.AnythingOfType("uint64")).
 		Return(testChat, nil).
 		Run(func(args mock.Arguments) {
 			time.Sleep(time.Microsecond * 100) // 100μs simulated DB latency
@@ -328,7 +341,7 @@ func BenchmarkServiceLatency(b *testing.B) {
 		b.SetParallelism(1)
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				_, err := service.GetByID(1)
+				_, err := service.GetByID(context.Background(), 1)
 				if err != nil {
 					b.Fatalf("Failed to get chat: %v", err)
 				}
@@ -340,7 +353,7 @@ func BenchmarkServiceLatency(b *testing.B) {
 		b.SetParallelism(10)
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				_, err := service.GetByID(1)
+				_, err := service.GetByID(context.Background(), 1)
 				if err != nil {
 					b.Fatalf("Failed to get chat: %v", err)
 				}
@@ -352,7 +365,7 @@ func BenchmarkServiceLatency(b *testing.B) {
 		b.SetParallelism(50)
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				_, err := service.GetByID(1)
+				_, err := service.GetByID(context.Background(), 1)
 				if err != nil {
 					b.Fatalf("Failed to get chat: %v", err)
 				}
@@ -373,12 +386,13 @@ func BenchmarkMemoryAllocation(b *testing.B) {
 		largeChats[i].Metadata = `{"large_data": "` + strings.Repeat("x", 1024) + `"}` // 1KB each
 	}
 
-	mockRepo.On("FindByOrganizationID", uint64(1), 1000, 0).Return(largeChats, nil)
+	mockRepo.On("FindByOrganizationID", mock.AnythingOfType("context.Context"), uint64(1), 1000, 0).
+		Return(largeChats, nil)
 
 	b.ResetTimer()
 	b.Run("LargeResultSet", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			chats, err := service.GetByOrganizationID(1, 1000, 0)
+			chats, err := service.GetByOrganizationID(context.Background(), 1, 1000, 0)
 			if err != nil {
 				b.Fatalf("Failed to get chats: %v", err)
 			}

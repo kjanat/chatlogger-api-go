@@ -34,6 +34,48 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Compare version strings (version_gte actual_version required_version)
+# Returns 0 if actual >= required, 1 otherwise
+version_gte() {
+    local actual="$1"
+    local required="$2"
+
+    # Handle Go version format (e.g., "1.21.0" or "1.21")
+    # Convert to comparable format by padding with zeros
+    local actual_major=$(echo "$actual" | cut -d. -f1)
+    local actual_minor=$(echo "$actual" | cut -d. -f2)
+    local actual_patch=$(echo "$actual" | cut -d. -f3)
+
+    local required_major=$(echo "$required" | cut -d. -f1)
+    local required_minor=$(echo "$required" | cut -d. -f2)
+    local required_patch=$(echo "$required" | cut -d. -f3)
+
+    # Default patch version to 0 if not specified
+    actual_patch=${actual_patch:-0}
+    required_patch=${required_patch:-0}
+
+    # Compare major version
+    if [ "$actual_major" -gt "$required_major" ]; then
+        return 0
+    elif [ "$actual_major" -lt "$required_major" ]; then
+        return 1
+    fi
+
+    # Major versions equal, compare minor version
+    if [ "$actual_minor" -gt "$required_minor" ]; then
+        return 0
+    elif [ "$actual_minor" -lt "$required_minor" ]; then
+        return 1
+    fi
+
+    # Major and minor equal, compare patch version
+    if [ "$actual_patch" -ge "$required_patch" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Check Go installation
 check_go() {
     print_status "Checking Go installation..."
@@ -44,6 +86,26 @@ check_go() {
 
     GO_VERSION=$(go version | cut -d' ' -f3 | sed 's/go//')
     print_success "Go $GO_VERSION is installed"
+
+    # Check minimum version requirement
+    MIN_GO_VERSION="1.21"
+    if ! version_gte "$GO_VERSION" "$MIN_GO_VERSION"; then
+        print_error "Go version $GO_VERSION is not supported. Minimum required version: $MIN_GO_VERSION"
+        print_error "Please upgrade Go from https://golang.org/dl/"
+        exit 1
+    fi
+    print_success "Go version meets minimum requirement ($MIN_GO_VERSION)"
+}
+
+# Detect Docker Compose command (new plugin or legacy binary)
+detect_docker_compose() {
+    if command_exists docker && docker compose version >/dev/null 2>&1; then
+        echo "docker compose"
+    elif command_exists docker-compose; then
+        echo "docker-compose"
+    else
+        echo ""
+    fi
 }
 
 # Check Docker installation
@@ -54,12 +116,13 @@ check_docker() {
         return 1
     fi
 
-    if ! command_exists docker-compose; then
+    DOCKER_COMPOSE_CMD=$(detect_docker_compose)
+    if [ -z "$DOCKER_COMPOSE_CMD" ]; then
         print_warning "Docker Compose is not installed. Some features may not work."
         return 1
     fi
 
-    print_success "Docker and Docker Compose are installed"
+    print_success "Docker and Docker Compose ($DOCKER_COMPOSE_CMD) are installed"
     return 0
 }
 
@@ -128,26 +191,45 @@ setup_database() {
         return
     fi
 
+    # Detect Docker Compose command
+    DOCKER_COMPOSE_CMD=$(detect_docker_compose)
+    if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+        print_error "Docker Compose not found"
+        return 1
+    fi
+
     print_status "Setting up development database..."
 
     # Start PostgreSQL and Redis
-    docker-compose up -d postgres redis
+    $DOCKER_COMPOSE_CMD up -d postgres redis
 
     # Wait for PostgreSQL to be ready
     print_status "Waiting for PostgreSQL to be ready..."
-    for _ in {1..30}; do
-        if docker-compose exec postgres pg_isready -U postgres >/dev/null 2>&1; then
+    POSTGRES_READY=false
+    for attempt in {1..30}; do
+        if $DOCKER_COMPOSE_CMD exec postgres pg_isready -U postgres >/dev/null 2>&1; then
+            POSTGRES_READY=true
             break
         fi
+        print_status "PostgreSQL not ready yet (attempt $attempt/30)..."
         sleep 1
     done
+
+    # Fail fast if PostgreSQL never became ready
+    if [ "$POSTGRES_READY" = false ]; then
+        print_error "PostgreSQL failed to become ready after 30 seconds"
+        print_error "Check Docker containers with: $DOCKER_COMPOSE_CMD logs postgres"
+        exit 1
+    fi
+
+    print_success "PostgreSQL is ready"
 
     # Run migrations
     print_status "Running database migrations..."
     if [ -f migrations/001_initial_schema.sql ]; then
-        docker-compose exec postgres psql -U postgres -d chatlogger -f /docker-entrypoint-initdb.d/001_initial_schema.sql 2>/dev/null || true
-        docker-compose exec postgres psql -U postgres -d chatlogger -f /docker-entrypoint-initdb.d/002_ensure_defaults.sql 2>/dev/null || true
-        docker-compose exec postgres psql -U postgres -d chatlogger -f /docker-entrypoint-initdb.d/003_add_exports_table.sql 2>/dev/null || true
+        $DOCKER_COMPOSE_CMD exec postgres psql -U postgres -d chatlogger -f /docker-entrypoint-initdb.d/001_initial_schema.sql 2>/dev/null || true
+        $DOCKER_COMPOSE_CMD exec postgres psql -U postgres -d chatlogger -f /docker-entrypoint-initdb.d/002_ensure_defaults.sql 2>/dev/null || true
+        $DOCKER_COMPOSE_CMD exec postgres psql -U postgres -d chatlogger -f /docker-entrypoint-initdb.d/003_add_exports_table.sql 2>/dev/null || true
         print_success "Database migrations completed"
     else
         print_warning "Migration files not found, skipping database setup"

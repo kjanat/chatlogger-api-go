@@ -376,7 +376,7 @@ func (h *ExportHandler) parseSyncExportRequest(c *gin.Context) (*ExportRequest, 
 func (h *ExportHandler) loadSyncExportData(
 	c *gin.Context, orgID uint64, req *ExportRequest,
 ) ([]domain.Chat, error) {
-	chats, err := h.chatService.GetByOrganizationID(orgID, 1000, 0)
+	chats, err := h.chatService.GetByOrganizationID(c.Request.Context(), orgID, 1000, 0)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve chats"})
 		return nil, fmt.Errorf("failed to retrieve chats: %w", err)
@@ -394,7 +394,7 @@ func (h *ExportHandler) loadSyncExportData(
 // loadMessagesForSyncExport loads messages for each chat.
 func (h *ExportHandler) loadMessagesForSyncExport(c *gin.Context, chats []domain.Chat) error {
 	for i := range chats {
-		messages, err := h.messageService.GetByChatID(chats[i].ID)
+		messages, err := h.messageService.GetByChatID(c.Request.Context(), chats[i].ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve messages"})
 			return fmt.Errorf("failed to retrieve messages for chat %d: %w", chats[i].ID, err)

@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -89,21 +90,25 @@ func (m *Message) Validate() error {
 
 // MessageRepository defines the interface for message data operations.
 type MessageRepository interface {
-	Create(message *Message) error
-	FindByID(id uint64) (*Message, error)
-	FindByChatID(chatID uint64) ([]Message, error)
-	CountByOrgIDAndDateRange(orgID uint64, start, end time.Time) (int64, error)
-	GetRoleStats(orgID uint64) (map[MessageRole]int64, error)
+	Create(ctx context.Context, message *Message) error
+	FindByID(ctx context.Context, id uint64) (*Message, error)
+	FindByChatID(ctx context.Context, chatID uint64) ([]Message, error)
+	CountByOrgIDAndDateRange(ctx context.Context, orgID uint64, start, end time.Time) (int64, error)
+	GetRoleStats(ctx context.Context, orgID uint64) (map[MessageRole]int64, error)
 	// Remove or update methods related to deprecated fields if they exist
-	// GetLatencyStats(orgID uint64) (map[string]float64, error)  // min, max, avg
-	// GetTokenCountStats(orgID uint64) (map[string]int64, error) // total, avg
+	// GetLatencyStats(ctx context.Context, orgID uint64) (map[string]float64, error)  // min, max, avg
+	// GetTokenCountStats(ctx context.Context, orgID uint64) (map[string]int64, error) // total, avg
 }
 
 // MessageService defines the interface for message business logic.
 type MessageService interface {
-	CreateMessage(message *Message) error
-	GetByID(id uint64) (*Message, error)
-	GetByChatID(chatID uint64) ([]Message, error)
+	CreateMessage(ctx context.Context, message *Message) error
+	GetByID(ctx context.Context, id uint64) (*Message, error)
+	GetByChatID(ctx context.Context, chatID uint64) ([]Message, error)
 	// Analytics methods for messages
-	GetMessageStats(orgID uint64, start, end time.Time) (map[string]interface{}, error)
+	GetMessageStats(
+		ctx context.Context,
+		orgID uint64,
+		start, end time.Time,
+	) (map[string]interface{}, error)
 }

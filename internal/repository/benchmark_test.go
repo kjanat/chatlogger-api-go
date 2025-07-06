@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -35,7 +36,7 @@ func BenchmarkChatRepository_Create(b *testing.B) {
 			chat := fixtures.CreateTestChat(user.ID)
 			chat.OrganizationID = org.ID
 
-			err := repo.Create(chat)
+			err := repo.Create(context.Background(), chat)
 			if err != nil {
 				b.Fatalf("Failed to create chat: %v", err)
 			}
@@ -65,7 +66,7 @@ func BenchmarkChatRepository_FindByID(b *testing.B) {
 	for i := 0; i < 100; i++ {
 		chat := fixtures.CreateTestChat(user.ID)
 		chat.OrganizationID = org.ID
-		err := repo.Create(chat)
+		err := repo.Create(context.Background(), chat)
 		require.NoError(b, err)
 		chatIDs[i] = chat.ID
 	}
@@ -74,7 +75,7 @@ func BenchmarkChatRepository_FindByID(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {
-			_, err := repo.FindByID(chatIDs[i%len(chatIDs)])
+			_, err := repo.FindByID(context.Background(), chatIDs[i%len(chatIDs)])
 			if err != nil {
 				b.Fatalf("Failed to find chat: %v", err)
 			}
@@ -105,7 +106,7 @@ func BenchmarkChatRepository_FindByOrganizationID(b *testing.B) {
 		chat := fixtures.CreateTestChat(user.ID)
 		chat.OrganizationID = org.ID
 		chat.Title = fmt.Sprintf("Chat %d", i)
-		err := repo.Create(chat)
+		err := repo.Create(context.Background(), chat)
 		require.NoError(b, err)
 	}
 
@@ -114,7 +115,7 @@ func BenchmarkChatRepository_FindByOrganizationID(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			offset := 0
 			for pb.Next() {
-				_, err := repo.FindByOrganizationID(org.ID, 10, offset%900)
+				_, err := repo.FindByOrganizationID(context.Background(), org.ID, 10, offset%900)
 				if err != nil {
 					b.Fatalf("Failed to find chats: %v", err)
 				}
@@ -127,7 +128,7 @@ func BenchmarkChatRepository_FindByOrganizationID(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			offset := 0
 			for pb.Next() {
-				_, err := repo.FindByOrganizationID(org.ID, 50, offset%950)
+				_, err := repo.FindByOrganizationID(context.Background(), org.ID, 50, offset%950)
 				if err != nil {
 					b.Fatalf("Failed to find chats: %v", err)
 				}
@@ -140,7 +141,7 @@ func BenchmarkChatRepository_FindByOrganizationID(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			offset := 0
 			for pb.Next() {
-				_, err := repo.FindByOrganizationID(org.ID, 100, offset%900)
+				_, err := repo.FindByOrganizationID(context.Background(), org.ID, 100, offset%900)
 				if err != nil {
 					b.Fatalf("Failed to find chats: %v", err)
 				}
@@ -172,7 +173,7 @@ func BenchmarkChatRepository_Update(b *testing.B) {
 	for i := 0; i < 100; i++ {
 		chat := fixtures.CreateTestChat(user.ID)
 		chat.OrganizationID = org.ID
-		err := repo.Create(chat)
+		err := repo.Create(context.Background(), chat)
 		require.NoError(b, err)
 		chats[i] = chat
 	}
@@ -185,7 +186,7 @@ func BenchmarkChatRepository_Update(b *testing.B) {
 			chat.Title = fmt.Sprintf("Updated Chat %d", time.Now().UnixNano())
 			chat.UpdatedAt = time.Now()
 
-			err := repo.Update(chat)
+			err := repo.Update(context.Background(), chat)
 			if err != nil {
 				b.Fatalf("Failed to update chat: %v", err)
 			}
@@ -214,7 +215,7 @@ func BenchmarkMessageRepository_Create(b *testing.B) {
 
 	chat := fixtures.CreateTestChat(user.ID)
 	chat.OrganizationID = org.ID
-	err = chatRepo.Create(chat)
+	err = chatRepo.Create(context.Background(), chat)
 	require.NoError(b, err)
 
 	b.ResetTimer()
@@ -222,7 +223,7 @@ func BenchmarkMessageRepository_Create(b *testing.B) {
 		for pb.Next() {
 			message := fixtures.CreateTestMessage(chat.ID)
 
-			err := messageRepo.Create(message)
+			err := messageRepo.Create(context.Background(), message)
 			if err != nil {
 				b.Fatalf("Failed to create message: %v", err)
 			}
@@ -250,21 +251,21 @@ func BenchmarkMessageRepository_FindByChatID(b *testing.B) {
 
 	chat := fixtures.CreateTestChat(user.ID)
 	chat.OrganizationID = org.ID
-	err = chatRepo.Create(chat)
+	err = chatRepo.Create(context.Background(), chat)
 	require.NoError(b, err)
 
 	// Create many messages for the chat
 	for i := 0; i < 1000; i++ {
 		message := fixtures.CreateTestMessage(chat.ID)
 		message.Content = fmt.Sprintf("Message %d content", i)
-		err := messageRepo.Create(message)
+		err := messageRepo.Create(context.Background(), message)
 		require.NoError(b, err)
 	}
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_, err := messageRepo.FindByChatID(chat.ID)
+			_, err := messageRepo.FindByChatID(context.Background(), chat.ID)
 			if err != nil {
 				b.Fatalf("Failed to find messages: %v", err)
 			}
@@ -295,7 +296,7 @@ func BenchmarkDatabase_ConcurrentOperations(b *testing.B) {
 	for i := 0; i < 50; i++ {
 		chat := fixtures.CreateTestChat(user.ID)
 		chat.OrganizationID = org.ID
-		err := chatRepo.Create(chat)
+		err := chatRepo.Create(context.Background(), chat)
 		require.NoError(b, err)
 		existingChats[i] = chat
 	}
@@ -309,14 +310,17 @@ func BenchmarkDatabase_ConcurrentOperations(b *testing.B) {
 				case 0: // Create chat
 					chat := fixtures.CreateTestChat(user.ID)
 					chat.OrganizationID = org.ID
-					_ = chatRepo.Create(chat)
+					_ = chatRepo.Create(context.Background(), chat)
 				case 1: // Read chat
-					_, _ = chatRepo.FindByID(existingChats[i%len(existingChats)].ID)
+					_, _ = chatRepo.FindByID(
+						context.Background(),
+						existingChats[i%len(existingChats)].ID,
+					)
 				case 2: // Create message
 					message := fixtures.CreateTestMessage(existingChats[i%len(existingChats)].ID)
-					_ = messageRepo.Create(message)
+					_ = messageRepo.Create(context.Background(), message)
 				case 3: // List chats
-					_, _ = chatRepo.FindByOrganizationID(org.ID, 10, 0)
+					_, _ = chatRepo.FindByOrganizationID(context.Background(), org.ID, 10, 0)
 				}
 				i++
 			}
@@ -347,7 +351,7 @@ func BenchmarkQueryPerformance(b *testing.B) {
 			chat := fixtures.CreateTestChat(user.ID)
 			chat.OrganizationID = org.ID
 			chat.Tags = fmt.Sprintf(`["tag-%d", "category-%d"]`, i%5, i%3)
-			err := chatRepo.Create(chat)
+			err := chatRepo.Create(context.Background(), chat)
 			require.NoError(b, err)
 		}
 	}
@@ -360,7 +364,7 @@ func BenchmarkQueryPerformance(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			orgID := uint64(1)
 			for pb.Next() {
-				_, err := chatRepo.CountByOrgIDAndDateRange(orgID, start, end)
+				_, err := chatRepo.CountByOrgIDAndDateRange(context.Background(), orgID, start, end)
 				if err != nil {
 					b.Fatalf("Failed to count chats: %v", err)
 				}
@@ -373,7 +377,7 @@ func BenchmarkQueryPerformance(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			orgID := uint64(1)
 			for pb.Next() {
-				_, err := chatRepo.GetTagStats(orgID)
+				_, err := chatRepo.GetTagStats(context.Background(), orgID)
 				if err != nil {
 					b.Fatalf("Failed to get tag stats: %v", err)
 				}
@@ -408,14 +412,14 @@ func BenchmarkMemoryUsage(b *testing.B) {
 			`{"large_field": "%s"}`,
 			strings.Repeat("x", 1024),
 		) // 1KB metadata
-		err := chatRepo.Create(chat)
+		err := chatRepo.Create(context.Background(), chat)
 		require.NoError(b, err)
 	}
 
 	b.ResetTimer()
 	b.Run("LargeBatchQuery", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			chats, err := chatRepo.FindByOrganizationID(org.ID, 500, 0)
+			chats, err := chatRepo.FindByOrganizationID(context.Background(), org.ID, 500, 0)
 			if err != nil {
 				b.Fatalf("Failed to find chats: %v", err)
 			}
@@ -455,7 +459,7 @@ func BenchmarkConnectionPooling(b *testing.B) {
 			for pb.Next() {
 				chat := fixtures.CreateTestChat(user.ID)
 				chat.OrganizationID = org.ID
-				err := chatRepo.Create(chat)
+				err := chatRepo.Create(context.Background(), chat)
 				if err != nil {
 					b.Fatalf("Failed to create chat: %v", err)
 				}

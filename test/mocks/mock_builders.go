@@ -22,7 +22,7 @@ func NewMockChatRepositoryBuilder() *MockChatRepositoryBuilder {
 
 // WithCreateReturns configures the Create method mock.
 func (b *MockChatRepositoryBuilder) WithCreateReturns(err error) *MockChatRepositoryBuilder {
-	b.mock.On("Create", mock.AnythingOfType("*domain.Chat")).Return(err)
+	b.mock.On("Create", mock.Anything, mock.AnythingOfType("*domain.Chat")).Return(err)
 	return b
 }
 
@@ -31,7 +31,7 @@ func (b *MockChatRepositoryBuilder) WithFindByIDReturns(
 	chat *domain.Chat,
 	err error,
 ) *MockChatRepositoryBuilder {
-	b.mock.On("FindByID", mock.AnythingOfType("uint64")).Return(chat, err)
+	b.mock.On("FindByID", mock.Anything, mock.AnythingOfType("uint64")).Return(chat, err)
 	return b
 }
 
@@ -40,20 +40,20 @@ func (b *MockChatRepositoryBuilder) WithFindByOrganizationIDReturns(
 	chats []domain.Chat,
 	err error,
 ) *MockChatRepositoryBuilder {
-	b.mock.On("FindByOrganizationID", mock.AnythingOfType("uint64"), mock.AnythingOfType("int"), mock.AnythingOfType("int")).
+	b.mock.On("FindByOrganizationID", mock.Anything, mock.AnythingOfType("uint64"), mock.AnythingOfType("int"), mock.AnythingOfType("int")).
 		Return(chats, err)
 	return b
 }
 
 // WithUpdateReturns configures the Update method mock.
 func (b *MockChatRepositoryBuilder) WithUpdateReturns(err error) *MockChatRepositoryBuilder {
-	b.mock.On("Update", mock.AnythingOfType("*domain.Chat")).Return(err)
+	b.mock.On("Update", mock.Anything, mock.AnythingOfType("*domain.Chat")).Return(err)
 	return b
 }
 
 // WithDeleteReturns configures the Delete method mock.
 func (b *MockChatRepositoryBuilder) WithDeleteReturns(err error) *MockChatRepositoryBuilder {
-	b.mock.On("Delete", mock.AnythingOfType("uint64")).Return(err)
+	b.mock.On("Delete", mock.Anything, mock.AnythingOfType("uint64")).Return(err)
 	return b
 }
 
@@ -62,7 +62,7 @@ func (b *MockChatRepositoryBuilder) WithCountByOrgIDAndDateRangeReturns(
 	count int64,
 	err error,
 ) *MockChatRepositoryBuilder {
-	b.mock.On("CountByOrgIDAndDateRange", mock.AnythingOfType("uint64"), mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).
+	b.mock.On("CountByOrgIDAndDateRange", mock.Anything, mock.AnythingOfType("uint64"), mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).
 		Return(count, err)
 	return b
 }
@@ -72,7 +72,7 @@ func (b *MockChatRepositoryBuilder) WithGetTagStatsReturns(
 	stats map[string]int64,
 	err error,
 ) *MockChatRepositoryBuilder {
-	b.mock.On("GetTagStats", mock.AnythingOfType("uint64")).Return(stats, err)
+	b.mock.On("GetTagStats", mock.Anything, mock.AnythingOfType("uint64")).Return(stats, err)
 	return b
 }
 

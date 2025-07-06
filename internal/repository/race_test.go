@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"runtime"
 	"sync"
@@ -66,7 +67,7 @@ func TestConcurrentChatCreation(t *testing.T) {
 				chat.OrganizationID = org.ID
 				chat.Title = fmt.Sprintf("Chat %d-%d", goroutineID, j)
 
-				err := repo.Create(chat)
+				err := repo.Create(context.Background(), chat)
 				results <- err
 
 				if err == nil {
@@ -137,7 +138,7 @@ func TestConcurrentReadWrite(t *testing.T) {
 	// Pre-create a chat to read/update
 	chat := fixtures.CreateTestChat(user.ID)
 	chat.OrganizationID = org.ID
-	err = repo.Create(chat)
+	err = repo.Create(context.Background(), chat)
 	require.NoError(t, err)
 
 	const numOperations = 100
@@ -149,7 +150,7 @@ func TestConcurrentReadWrite(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			_, err := repo.FindByID(chat.ID)
+			_, err := repo.FindByID(context.Background(), chat.ID)
 			errors <- err
 		}()
 	}
@@ -171,7 +172,7 @@ func TestConcurrentReadWrite(t *testing.T) {
 				UpdatedAt:      time.Now(),
 			}
 
-			err := repo.Update(chatToUpdate)
+			err := repo.Update(context.Background(), chatToUpdate)
 			errors <- err
 		}(i)
 	}
@@ -181,7 +182,7 @@ func TestConcurrentReadWrite(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			_, err := repo.FindByOrganizationID(org.ID, 10, 0)
+			_, err := repo.FindByOrganizationID(context.Background(), org.ID, 10, 0)
 			errors <- err
 		}()
 	}
@@ -256,17 +257,17 @@ func TestConcurrentConnectionHandling(t *testing.T) {
 					chat := fixtures.CreateTestChat(user.ID)
 					chat.OrganizationID = org.ID
 					chat.Title = fmt.Sprintf("Chat %d-%d", goroutineID, j)
-					err := repo.Create(chat)
+					err := repo.Create(context.Background(), chat)
 					errors <- err
 
 				case 1:
-					_, err := repo.FindByOrganizationID(org.ID, 5, 0)
+					_, err := repo.FindByOrganizationID(context.Background(), org.ID, 5, 0)
 					errors <- err
 
 				case 2:
 					// Simulate longer operation
 					time.Sleep(time.Millisecond * 10)
-					_, err := repo.FindByOrganizationID(org.ID, 10, 0)
+					_, err := repo.FindByOrganizationID(context.Background(), org.ID, 10, 0)
 					errors <- err
 				}
 			}
@@ -339,7 +340,7 @@ func TestRaceConditionInTransactions(t *testing.T) {
 			chat.OrganizationID = org.ID
 			chat.Title = fmt.Sprintf("Transaction Chat %d", txID)
 
-			err := txChatRepo.Create(chat)
+			err := txChatRepo.Create(context.Background(), chat)
 			if err != nil {
 				tx.Rollback()
 				errors <- err
@@ -351,7 +352,7 @@ func TestRaceConditionInTransactions(t *testing.T) {
 			message := fixtures.CreateTestMessage(chat.ID)
 			message.Content = fmt.Sprintf("Transaction Message %d", txID)
 
-			err = txMessageRepo.Create(message)
+			err = txMessageRepo.Create(context.Background(), message)
 			if err != nil {
 				tx.Rollback()
 				errors <- err
@@ -446,7 +447,7 @@ func TestMemoryRaceConditions(t *testing.T) {
 			chat.OrganizationID = org.ID
 			chat.Title = fmt.Sprintf("Race Test Chat %d", goroutineID)
 
-			err := repo.Create(chat)
+			err := repo.Create(context.Background(), chat)
 			if err != nil {
 				errors <- err
 				return
@@ -517,7 +518,7 @@ func TestGoroutineLeaks(t *testing.T) {
 
 				chat := fixtures.CreateTestChat(user.ID)
 				chat.OrganizationID = org.ID
-				_ = repo.Create(chat)
+				_ = repo.Create(context.Background(), chat)
 
 				// Force some work to potentially leak
 				done := make(chan bool)
@@ -582,7 +583,7 @@ func TestDataRaceInStats(t *testing.T) {
 		chat := fixtures.CreateTestChat(user.ID)
 		chat.OrganizationID = org.ID
 		chat.Tags = fmt.Sprintf(`["tag-%d"]`, i%5)
-		err := repo.Create(chat)
+		err := repo.Create(context.Background(), chat)
 		require.NoError(t, err)
 	}
 
@@ -597,13 +598,13 @@ func TestDataRaceInStats(t *testing.T) {
 			defer wg.Done()
 
 			// Get tag stats
-			_, err := repo.GetTagStats(org.ID)
+			_, err := repo.GetTagStats(context.Background(), org.ID)
 			errors <- err
 
 			// Get count by date range
 			start := time.Now().AddDate(0, 0, -1)
 			end := time.Now()
-			_, err = repo.CountByOrgIDAndDateRange(org.ID, start, end)
+			_, err = repo.CountByOrgIDAndDateRange(context.Background(), org.ID, start, end)
 			errors <- err
 
 			// Create new chat while others are reading stats
@@ -611,7 +612,7 @@ func TestDataRaceInStats(t *testing.T) {
 				chat := fixtures.CreateTestChat(user.ID)
 				chat.OrganizationID = org.ID
 				chat.Tags = fmt.Sprintf(`["new-tag-%d"]`, goroutineID)
-				err = repo.Create(chat)
+				err = repo.Create(context.Background(), chat)
 				errors <- err
 			} else {
 				errors <- nil

@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -13,16 +14,16 @@ type MockChatRepository struct {
 	mock.Mock
 }
 
-func (m *MockChatRepository) Create(chat *domain.Chat) error {
-	args := m.Called(chat)
+func (m *MockChatRepository) Create(ctx context.Context, chat *domain.Chat) error {
+	args := m.Called(ctx, chat)
 	if err := args.Error(0); err != nil {
 		return fmt.Errorf("mock create chat error: %w", err)
 	}
 	return nil
 }
 
-func (m *MockChatRepository) FindByID(id uint64) (*domain.Chat, error) {
-	args := m.Called(id)
+func (m *MockChatRepository) FindByID(ctx context.Context, id uint64) (*domain.Chat, error) {
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		if err := args.Error(1); err != nil {
 			return nil, fmt.Errorf("mock find chat by ID error: %w", err)
@@ -37,10 +38,11 @@ func (m *MockChatRepository) FindByID(id uint64) (*domain.Chat, error) {
 }
 
 func (m *MockChatRepository) FindByOrganizationID(
+	ctx context.Context,
 	orgID uint64,
 	limit, offset int,
 ) ([]domain.Chat, error) {
-	args := m.Called(orgID, limit, offset)
+	args := m.Called(ctx, orgID, limit, offset)
 	chats := args.Get(0).([]domain.Chat)
 	if err := args.Error(1); err != nil {
 		return nil, fmt.Errorf("mock find chats by organization ID error: %w", err)
@@ -48,8 +50,12 @@ func (m *MockChatRepository) FindByOrganizationID(
 	return chats, nil
 }
 
-func (m *MockChatRepository) FindByUserID(userID uint64, limit, offset int) ([]domain.Chat, error) {
-	args := m.Called(userID, limit, offset)
+func (m *MockChatRepository) FindByUserID(
+	ctx context.Context,
+	userID uint64,
+	limit, offset int,
+) ([]domain.Chat, error) {
+	args := m.Called(ctx, userID, limit, offset)
 	chats := args.Get(0).([]domain.Chat)
 	if err := args.Error(1); err != nil {
 		return nil, fmt.Errorf("mock find chats by user ID error: %w", err)
@@ -57,16 +63,16 @@ func (m *MockChatRepository) FindByUserID(userID uint64, limit, offset int) ([]d
 	return chats, nil
 }
 
-func (m *MockChatRepository) Update(chat *domain.Chat) error {
-	args := m.Called(chat)
+func (m *MockChatRepository) Update(ctx context.Context, chat *domain.Chat) error {
+	args := m.Called(ctx, chat)
 	if err := args.Error(0); err != nil {
 		return fmt.Errorf("mock update chat error: %w", err)
 	}
 	return nil
 }
 
-func (m *MockChatRepository) Delete(id uint64) error {
-	args := m.Called(id)
+func (m *MockChatRepository) Delete(ctx context.Context, id uint64) error {
+	args := m.Called(ctx, id)
 	if err := args.Error(0); err != nil {
 		return fmt.Errorf("mock delete chat error: %w", err)
 	}
@@ -74,10 +80,11 @@ func (m *MockChatRepository) Delete(id uint64) error {
 }
 
 func (m *MockChatRepository) CountByOrgIDAndDateRange(
+	ctx context.Context,
 	orgID uint64,
 	start, end time.Time,
 ) (int64, error) {
-	args := m.Called(orgID, start, end)
+	args := m.Called(ctx, orgID, start, end)
 	count := args.Get(0).(int64)
 	if err := args.Error(1); err != nil {
 		return 0, fmt.Errorf("mock count by org ID and date range error: %w", err)
@@ -85,8 +92,11 @@ func (m *MockChatRepository) CountByOrgIDAndDateRange(
 	return count, nil
 }
 
-func (m *MockChatRepository) GetTagStats(orgID uint64) (map[string]int64, error) {
-	args := m.Called(orgID)
+func (m *MockChatRepository) GetTagStats(
+	ctx context.Context,
+	orgID uint64,
+) (map[string]int64, error) {
+	args := m.Called(ctx, orgID)
 	stats := args.Get(0).(map[string]int64)
 	if err := args.Error(1); err != nil {
 		return nil, fmt.Errorf("mock get tag stats error: %w", err)
@@ -238,16 +248,16 @@ type MockMessageRepository struct {
 	mock.Mock
 }
 
-func (m *MockMessageRepository) Create(message *domain.Message) error {
-	args := m.Called(message)
+func (m *MockMessageRepository) Create(ctx context.Context, message *domain.Message) error {
+	args := m.Called(ctx, message)
 	if err := args.Error(0); err != nil {
 		return fmt.Errorf("mock create message error: %w", err)
 	}
 	return nil
 }
 
-func (m *MockMessageRepository) FindByID(id uint64) (*domain.Message, error) {
-	args := m.Called(id)
+func (m *MockMessageRepository) FindByID(ctx context.Context, id uint64) (*domain.Message, error) {
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		if err := args.Error(1); err != nil {
 			return nil, fmt.Errorf("mock find message by ID error: %w", err)
@@ -261,8 +271,11 @@ func (m *MockMessageRepository) FindByID(id uint64) (*domain.Message, error) {
 	return message, nil
 }
 
-func (m *MockMessageRepository) FindByChatID(chatID uint64) ([]domain.Message, error) {
-	args := m.Called(chatID)
+func (m *MockMessageRepository) FindByChatID(
+	ctx context.Context,
+	chatID uint64,
+) ([]domain.Message, error) {
+	args := m.Called(ctx, chatID)
 	messages := args.Get(0).([]domain.Message)
 	if err := args.Error(1); err != nil {
 		return nil, fmt.Errorf("mock find messages by chat ID error: %w", err)
@@ -271,10 +284,11 @@ func (m *MockMessageRepository) FindByChatID(chatID uint64) ([]domain.Message, e
 }
 
 func (m *MockMessageRepository) CountByOrgIDAndDateRange(
+	ctx context.Context,
 	orgID uint64,
 	start, end time.Time,
 ) (int64, error) {
-	args := m.Called(orgID, start, end)
+	args := m.Called(ctx, orgID, start, end)
 	count := args.Get(0).(int64)
 	if err := args.Error(1); err != nil {
 		return 0, fmt.Errorf("mock count messages by org ID and date range error: %w", err)
@@ -282,8 +296,11 @@ func (m *MockMessageRepository) CountByOrgIDAndDateRange(
 	return count, nil
 }
 
-func (m *MockMessageRepository) GetRoleStats(orgID uint64) (map[domain.MessageRole]int64, error) {
-	args := m.Called(orgID)
+func (m *MockMessageRepository) GetRoleStats(
+	ctx context.Context,
+	orgID uint64,
+) (map[domain.MessageRole]int64, error) {
+	args := m.Called(ctx, orgID)
 	stats := args.Get(0).(map[domain.MessageRole]int64)
 	if err := args.Error(1); err != nil {
 		return nil, fmt.Errorf("mock get role stats error: %w", err)
