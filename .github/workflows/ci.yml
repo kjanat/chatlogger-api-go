@@ -7,7 +7,7 @@ on:
     branches: [ main, master, develop ]
 
 env:
-  GO_VERSION: '1.24.2'
+  GO_VERSION: '1.24.4'
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -113,7 +113,7 @@ jobs:
 
       - name: Wait for PostgreSQL
         run: |
-          for i in {1..30}; do
+          for _ in {1..30}; do
             if pg_isready -h localhost -p 5432 -U testuser; then
               break
             fi
@@ -125,9 +125,9 @@ jobs:
         env:
           DATABASE_URL: postgres://testuser:testpass@localhost:5432/chatlogger_test?sslmode=disable
         run: |
-          psql $DATABASE_URL -f migrations/001_initial_schema.sql
-          psql $DATABASE_URL -f migrations/002_ensure_defaults.sql
-          psql $DATABASE_URL -f migrations/003_add_exports_table.sql
+          psql "$DATABASE_URL" -f migrations/001_initial_schema.sql
+          psql "$DATABASE_URL" -f migrations/002_ensure_defaults.sql
+          psql "$DATABASE_URL" -f migrations/003_add_exports_table.sql
 
       - name: Run tests
         env:

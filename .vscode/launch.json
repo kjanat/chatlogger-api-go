@@ -8,8 +8,8 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/server",
       "env": {
-        "DATABASE_URL": "postgres://postgres:password@localhost:5432/chatlogger?sslmode=disable",
-        "JWT_SECRET": "your-secret-key",
+        "DATABASE_URL": "${env:DATABASE_URL}",
+        "JWT_SECRET": "${env:JWT_SECRET}",
         "REDIS_ADDR": "localhost:6379",
         "PORT": "8080",
         "GIN_MODE": "debug"
@@ -26,7 +26,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/worker",
       "env": {
-        "DATABASE_URL": "postgres://postgres:password@localhost:5432/chatlogger?sslmode=disable",
+        "DATABASE_URL": "${env:DATABASE_URL}",
         "REDIS_ADDR": "localhost:6379"
       },
       "args": [],
@@ -41,9 +41,9 @@
       "mode": "test",
       "program": "${workspaceFolder}",
       "env": {
-        "TEST_DATABASE_URL": "postgres://postgres:password@localhost:5432/chatlogger_test?sslmode=disable",
+        "TEST_DATABASE_URL": "${env:TEST_DATABASE_URL}",
         "REDIS_ADDR": "localhost:6379",
-        "JWT_SECRET": "test-secret"
+        "JWT_SECRET": "${env:JWT_SECRET}"
       },
       "args": [
         "-test.run",
@@ -59,9 +59,9 @@
       "mode": "test",
       "program": "${fileDirname}",
       "env": {
-        "TEST_DATABASE_URL": "postgres://postgres:password@localhost:5432/chatlogger_test?sslmode=disable",
+        "TEST_DATABASE_URL": "${env:TEST_DATABASE_URL}",
         "REDIS_ADDR": "localhost:6379",
-        "JWT_SECRET": "test-secret"
+        "JWT_SECRET": "${env:JWT_SECRET}"
       },
       "args": [
         "-test.v"
@@ -85,4 +85,3 @@
     }
   ]
 }
-EOF < /dev/null

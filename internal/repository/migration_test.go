@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -318,7 +319,7 @@ func TestMigrationPerformance(t *testing.T) {
 			err := db.Exec(`
 				INSERT INTO organizations (name, slug)
 				VALUES (?, ?)
-			`, "Org "+string(rune(i)), "org-"+string(rune(i))).Error
+			`, fmt.Sprintf("Org %d", i), fmt.Sprintf("org-%d", i)).Error
 			require.NoError(t, err)
 		}
 

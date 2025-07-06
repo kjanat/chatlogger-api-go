@@ -1,6 +1,7 @@
 package service
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -369,7 +370,7 @@ func BenchmarkMemoryAllocation(b *testing.B) {
 	largeChats := make([]domain.Chat, 1000)
 	for i := range largeChats {
 		largeChats[i] = *fixtures.CreateTestChat(1)
-		largeChats[i].Metadata = `{"large_data": "` + string(make([]byte, 1024)) + `"}` // 1KB each
+		largeChats[i].Metadata = `{"large_data": "` + strings.Repeat("x", 1024) + `"}` // 1KB each
 	}
 
 	mockRepo.On("FindByOrganizationID", uint64(1), 1000, 0).Return(largeChats, nil)

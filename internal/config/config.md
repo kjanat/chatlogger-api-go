@@ -9,6 +9,7 @@
 package config
 
 import (
+    "fmt"
     "log"
     "os"
 
@@ -67,13 +68,12 @@ func LoadConfig() (*Config, error) {
 
     // Check if database URL is set, if not, return an error
     if cfg.DatabaseURL == "" {
-        log.Fatal("DATABASE_URL is required")
+        return nil, fmt.Errorf("DATABASE_URL is required")
     }
 
     // Check if JWT secret is set
     if cfg.JWTSecret == "" {
-        cfg.JWTSecret = "development-jwt-secret" // Default for development
-        log.Println("Warning: Using default JWT secret. Set JWT_SECRET for production.")
+        return nil, fmt.Errorf("JWT_SECRET is required for security")
     }
 
     // Check if Redis address is set
@@ -89,8 +89,8 @@ func LoadConfig() (*Config, error) {
     }
 
     // Create export directory if it doesn't exist
-    if err := os.MkdirAll(cfg.ExportDir, 0755); err != nil {
-        log.Printf("Warning: Failed to create export directory %s: %v", cfg.ExportDir, err)
+    if err := os.MkdirAll(cfg.ExportDir, 0750); err != nil {
+        return nil, fmt.Errorf("failed to create export directory %s: %w", cfg.ExportDir, err)
     }
 
     return cfg, nil

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -405,7 +406,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		chat.OrganizationID = org.ID
 		chat.Metadata = fmt.Sprintf(
 			`{"large_field": "%s"}`,
-			string(make([]byte, 1024)),
+			strings.Repeat("x", 1024),
 		) // 1KB metadata
 		err := chatRepo.Create(chat)
 		require.NoError(b, err)

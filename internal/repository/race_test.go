@@ -19,9 +19,6 @@ func TestConcurrentChatCreation(t *testing.T) {
 	t.Skip(
 		"Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines",
 	)
-	t.Skip(
-		"Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines",
-	)
 	if testing.Short() {
 		t.Skip("Skipping race condition test in short mode")
 	}
@@ -115,9 +112,6 @@ func TestConcurrentChatCreation(t *testing.T) {
 
 // TestConcurrentReadWrite tests concurrent read/write operations for race conditions.
 func TestConcurrentReadWrite(t *testing.T) {
-	t.Skip(
-		"Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines",
-	)
 	t.Skip(
 		"Skipping race condition test - SQLite in-memory DB doesn't support concurrent access across goroutines",
 	)

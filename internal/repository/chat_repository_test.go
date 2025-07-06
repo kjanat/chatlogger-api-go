@@ -243,14 +243,12 @@ func TestChatRepository_Update(t *testing.T) {
 
 	// Update chat
 	chat.Title = "Updated Title"
-	chat.Title = "Updated Title"
 	err = repo.Update(chat)
 	testutils.RepositoryError(t, err, "ChatRepository", "Update")
 
 	// Verify update
 	updatedChat, err := repo.FindByID(chat.ID)
 	testutils.RepositoryError(t, err, "ChatRepository", "FindByID after update")
-	assert.Equal(t, "Updated Title", updatedChat.Title)
 	assert.Equal(t, "Updated Title", updatedChat.Title)
 }
 

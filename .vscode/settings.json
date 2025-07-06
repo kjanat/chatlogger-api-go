@@ -117,4 +117,3 @@
     "GO111MODULE": "on"
   }
 }
-EOF < /dev/null

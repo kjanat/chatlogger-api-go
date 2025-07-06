@@ -1,4 +1,4 @@
-#\!/bin/bash
+#!/bin/bash
 
 # ChatLogger API - Development Environment Setup Script
 # This script sets up the development environment for new contributors
@@ -37,7 +37,7 @@ command_exists() {
 # Check Go installation
 check_go() {
     print_status "Checking Go installation..."
-    if \! command_exists go; then
+    if ! command_exists go; then
         print_error "Go is not installed. Please install Go 1.21+ from https://golang.org/dl/"
         exit 1
     fi
@@ -49,12 +49,12 @@ check_go() {
 # Check Docker installation
 check_docker() {
     print_status "Checking Docker installation..."
-    if \! command_exists docker; then
+    if ! command_exists docker; then
         print_warning "Docker is not installed. Some features may not work."
         return 1
     fi
 
-    if \! command_exists docker-compose; then
+    if ! command_exists docker-compose; then
         print_warning "Docker Compose is not installed. Some features may not work."
         return 1
     fi
@@ -68,13 +68,13 @@ install_tools() {
     print_status "Installing development tools..."
 
     # golangci-lint
-    if \! command_exists golangci-lint; then
+    if ! command_exists golangci-lint; then
         print_status "Installing golangci-lint..."
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
     fi
 
     # swag (Swagger generator)
-    if \! command_exists swag; then
+    if ! command_exists swag; then
         print_status "Installing swag..."
         go install github.com/swaggo/swag/v2/cmd/swag@latest
     fi
@@ -94,7 +94,7 @@ install_tools() {
 setup_env() {
     print_status "Setting up environment configuration..."
 
-    if [ \! -f .env ]; then
+    if [ ! -f .env ]; then
         if [ -f .env.example ]; then
             cp .env.example .env
             print_success "Created .env file from template"
@@ -117,7 +117,7 @@ download_deps() {
 
 # Setup database
 setup_database() {
-    if \! check_docker; then
+    if ! check_docker; then
         print_warning "Skipping database setup - Docker not available"
         return
     fi
@@ -230,4 +230,3 @@ main() {
 
 # Run main function
 main "$@"
-EOF < /dev/null
