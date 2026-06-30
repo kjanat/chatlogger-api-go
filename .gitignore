@@ -1,12 +1,13 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
+# ChatLogger API Go - Git Ignore Rules
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+bin/
+dist/
 
 # Test binary, built with `go test -c`
 *.test
@@ -14,55 +15,86 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 coverage.txt
+coverage.html
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Dependency directories
+vendor/
 
 # Temporary files
 *.tmp
 .temp/
+tmp/
 
 # Go workspace file
 go.work
 go.work.sum
 
-# Distribution files
-dist
-exports/
-
 # Environment/credential files
 .env
+.env.local
+.env.*.local
 cosign.key
+*.pem
+*.key
+*.crt
+
+# Log files
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Export/upload directories
+exports/
+uploads/
 
 # GitHub secret scanning
 .cache_ggshield
 
-# Go modules
-.golangci.reference.yml
-
-# Copied files
+# Backup and temporary files
 *?copy.*
 *?old.*
+*.backup
+*.bak
 
-# Unused GitHub
-.github/workflows/docker-build.yml
-.github/workflows/bump.yml
-.github/workflows/ci.yml
-.github/workflows/labels.yaml
-.github/workflows/release.yml
-.github/workflows/action.yml
-.github/workflows/autofix.yml
+# Documentation build artifacts (keep source docs)
+docs/site/
+site/
 
-# Markdown
-*.md
-*.markdown
-*.mdown
-*.mkd?
-*.mdwn
-*.mdx
-!README.md
+# API documentation generated files
+docs/swagger.json
+docs/swagger.yaml
 
-# Editor
-# .vscode/
-.vs/
+# Benchmark and profiling results
+benchmark_results.txt
+*.bench
+*.prof
+*.trace
+
+# Editor and IDE files
 .idea/
+.vs/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Development overrides
+docker-compose.override.yml
+.env.override
+
+# Testing artifacts
+.testcache/
+testdata/output/

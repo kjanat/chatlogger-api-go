@@ -7,9 +7,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/kjanat/chatlogger-api-go/internal/domain"
-
 	"github.com/gin-gonic/gin"
+	"github.com/kjanat/chatlogger-api-go/internal/domain"
 )
 
 // APIKeyHandler handles API key-related requests.
@@ -104,7 +103,10 @@ func (h *APIKeyHandler) ListKeys(c *gin.Context) {
 // validateKeyAccess is a helper function to validate API key access and permissions.
 // It returns the key ID, API key, and a boolean indicating if validation was successful.
 // If validation fails, it sets the appropriate HTTP response and returns false.
-func (h *APIKeyHandler) validateKeyAccess(c *gin.Context, actionName string) (uint64, *domain.APIKey, bool) {
+func (h *APIKeyHandler) validateKeyAccess(
+	c *gin.Context,
+	actionName string,
+) (uint64, *domain.APIKey, bool) {
 	// Get key ID from URL
 	keyID := c.Param("id")
 	if keyID == "" {

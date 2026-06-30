@@ -14,38 +14,37 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/joho/godotenv"
-
 	"github.com/kjanat/chatlogger-api-go/internal/jobs"
 	"github.com/kjanat/chatlogger-api-go/internal/repository"
 	"github.com/kjanat/chatlogger-api-go/internal/service"
 )
 
-// CustomLogger wraps the standard logger to implement asynq.Logger
+// CustomLogger wraps the standard logger to implement asynq.Logger.
 type CustomLogger struct {
 	*log.Logger
 }
 
-// Debug logs debug messages
+// Debug logs debug messages.
 func (l *CustomLogger) Debug(args ...interface{}) {
 	l.Println(args...)
 }
 
-// Info logs info messages
+// Info logs info messages.
 func (l *CustomLogger) Info(args ...interface{}) {
 	l.Println(args...)
 }
 
-// Warn logs warning messages
+// Warn logs warning messages.
 func (l *CustomLogger) Warn(args ...interface{}) {
 	l.Println(args...)
 }
 
-// Error logs error messages
+// Error logs error messages.
 func (l *CustomLogger) Error(args ...interface{}) {
 	l.Println(args...)
 }
 
-// Fatal logs fatal messages
+// Fatal logs fatal messages.
 func (l *CustomLogger) Fatal(args ...interface{}) {
 	l.Println(args...)
 }
@@ -69,7 +68,7 @@ func main() {
 	}
 
 	// Create exports directory if it doesn't exist
-	if err := os.MkdirAll(exportDir, 0755); err != nil {
+	if err := os.MkdirAll(exportDir, 0o750); err != nil {
 		log.Fatalf("Failed to create export directory: %v", err)
 	}
 
@@ -179,7 +178,8 @@ func main() {
 	// Start the worker
 	log.Println("Starting export worker...")
 	if err := srv.Run(mux); err != nil {
-		log.Fatalf("Could not run server: %v", err)
+		log.Printf("Could not run server: %v", err)
+		return
 	}
 
 	// Wait for shutdown to complete

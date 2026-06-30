@@ -11,11 +11,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/kjanat/chatlogger-api-go/internal/domain"
 	"github.com/kjanat/chatlogger-api-go/internal/middleware"
 	"github.com/kjanat/chatlogger-api-go/internal/strategy"
-
-	"github.com/gin-gonic/gin"
 )
 
 // ExportHandler handles export-related requests.
@@ -43,7 +42,7 @@ func NewExportHandler(
 
 // ExportRequest represents the request to export data.
 type ExportRequest struct {
-	Format string `binding:"required,oneof=json csv" json:"format"`
+	Format string `binding:"required,oneof=json csv"           json:"format"`
 	Type   string `binding:"required,oneof=chats messages all" json:"type"`
 }
 
@@ -107,16 +106,32 @@ func (h *ExportHandler) CreateExport(c *gin.Context) {
 		return
 	}
 
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid organization ID type"})
+		return
+	}
+
+	// Type assert user ID
+	userIDValue, ok := userID.(uint64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID type"})
+		return
+	}
+
 	// Create the export job
 	export, err := h.exportService.CreateExport(
-		orgID.(uint64),
-		userID.(uint64),
+		orgIDValue,
+		userIDValue,
 		format,
 		exportType,
 	)
-
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create export: " + err.Error()})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to create export: " + err.Error()},
+		)
 		return
 	}
 
@@ -154,7 +169,14 @@ func (h *ExportHandler) GetExport(c *gin.Context) {
 		return
 	}
 
-	export, err := h.exportService.GetExport(exportID, orgID.(uint64))
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid organization ID type"})
+		return
+	}
+
+	export, err := h.exportService.GetExport(exportID, orgIDValue)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Export not found"})
 		return
@@ -191,7 +213,14 @@ func (h *ExportHandler) DownloadExport(c *gin.Context) {
 		return
 	}
 
-	export, err := h.exportService.GetExport(exportID, orgID.(uint64))
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid organization ID type"})
+		return
+	}
+
+	export, err := h.exportService.GetExport(exportID, orgIDValue)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Export not found"})
 		return
@@ -271,7 +300,14 @@ func (h *ExportHandler) ListExports(c *gin.Context) {
 		return
 	}
 
-	exports, err := h.exportService.ListExports(orgID.(uint64), limit, offset)
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid organization ID type"})
+		return
+	}
+
+	exports, err := h.exportService.ListExports(orgIDValue, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch exports"})
 		return
@@ -295,40 +331,86 @@ func (h *ExportHandler) ListExports(c *gin.Context) {
 //	@Security		BearerAuth
 //	@Router			/v1/exports/sync [post]
 func (h *ExportHandler) SyncExport(c *gin.Context) {
+	req, orgID, err := h.parseSyncExportRequest(c)
+	if err != nil {
+		return // Error already sent in response
+	}
+
+	chats, err := h.loadSyncExportData(c, orgID, req)
+	if err != nil {
+		return // Error already sent in response
+	}
+
+	exportData, err := h.generateSyncExport(c, orgID, req, chats)
+	if err != nil {
+		return // Error already sent in response
+	}
+
+	h.sendSyncExportResponse(c, orgID, req, exportData)
+}
+
+// parseSyncExportRequest parses and validates the sync export request.
+func (h *ExportHandler) parseSyncExportRequest(c *gin.Context) (*ExportRequest, uint64, error) {
 	var req ExportRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
-		return
+		return nil, 0, fmt.Errorf("failed to bind JSON request: %w", err)
 	}
 
-	// Get organization ID from context
 	orgID, exists := c.Get(middleware.OrganizationIDKey)
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found in context"})
-		return
+		return nil, 0, fmt.Errorf("missing org ID")
 	}
 
-	// Get chats for the organization
-	// Using a reasonable limit for direct export
-	chats, err := h.chatService.GetByOrganizationID(orgID.(uint64), 1000, 0)
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		return nil, 0, fmt.Errorf("invalid organization ID type")
+	}
+
+	return &req, orgIDValue, nil
+}
+
+// loadSyncExportData retrieves chats and messages for the export.
+func (h *ExportHandler) loadSyncExportData(
+	c *gin.Context, orgID uint64, req *ExportRequest,
+) ([]domain.Chat, error) {
+	chats, err := h.chatService.GetByOrganizationID(c.Request.Context(), orgID, 1000, 0)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve chats"})
-		return
+		return nil, fmt.Errorf("failed to retrieve chats: %w", err)
 	}
 
-	// For each chat, get its messages if needed
 	if req.Type == "all" || req.Type == "messages" {
-		for i := range chats {
-			messages, err := h.messageService.GetByChatID(chats[i].ID)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve messages"})
-				return
-			}
-			chats[i].Messages = messages
+		if err := h.loadMessagesForSyncExport(c, chats); err != nil {
+			return nil, err
 		}
 	}
 
-	// Prepare data for export
+	return chats, nil
+}
+
+// loadMessagesForSyncExport loads messages for each chat.
+func (h *ExportHandler) loadMessagesForSyncExport(c *gin.Context, chats []domain.Chat) error {
+	for i := range chats {
+		messages, err := h.messageService.GetByChatID(c.Request.Context(), chats[i].ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve messages"})
+			return fmt.Errorf("failed to retrieve messages for chat %d: %w", chats[i].ID, err)
+		}
+		chats[i].Messages = messages
+	}
+	return nil
+}
+
+// generateSyncExport creates the export data using the appropriate exporter.
+func (h *ExportHandler) generateSyncExport(
+	c *gin.Context,
+	orgID uint64,
+	req *ExportRequest,
+	chats []domain.Chat,
+) ([]byte, error) {
 	data := gin.H{
 		"organization_id": orgID,
 		"export_date":     time.Now().Format(time.RFC3339),
@@ -336,39 +418,59 @@ func (h *ExportHandler) SyncExport(c *gin.Context) {
 		"chats":           chats,
 	}
 
-	// Select the appropriate exporter based on format
-	var exporter strategy.Exporter
-	switch req.Format {
-	case "json":
-		exporter = &strategy.JSONExporter{}
-	case "csv":
-		exporter = &strategy.CSVExporter{}
-	default:
+	exporter, err := h.createSyncExporter(req.Format)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported export format"})
-		return
+		return nil, err
 	}
 
-	// Export the data
 	exportData, err := exporter.Export(data)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to export data: " + err.Error()})
-		return
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to export data: " + err.Error()},
+		)
+		return nil, fmt.Errorf("failed to export data: %w", err)
 	}
 
-	// Set the appropriate content type and filename
-	var contentType, extension string
-	switch req.Format {
+	return exportData, nil
+}
+
+// createSyncExporter returns the appropriate exporter for the format.
+func (h *ExportHandler) createSyncExporter(format string) (strategy.Exporter, error) {
+	switch format {
 	case "json":
-		contentType = "application/json"
-		extension = "json"
+		return &strategy.JSONExporter{}, nil
 	case "csv":
-		contentType = "text/csv"
-		extension = "csv"
+		return &strategy.CSVExporter{}, nil
+	default:
+		return nil, fmt.Errorf("unsupported format: %s", format)
 	}
+}
 
-	filename := "chatlogger_export_" + strconv.FormatUint(orgID.(uint64), 10) + "_" +
-		time.Now().Format("20060102150405") + "." + extension
+// sendSyncExportResponse sends the export data as a file download.
+func (h *ExportHandler) sendSyncExportResponse(
+	c *gin.Context,
+	orgID uint64,
+	req *ExportRequest,
+	exportData []byte,
+) {
+	contentType, extension := h.getContentTypeAndExtension(req.Format)
+	filename := fmt.Sprintf("chatlogger_export_%d_%s.%s",
+		orgID, time.Now().Format("20060102150405"), extension)
 
 	c.Header("Content-Disposition", "attachment; filename="+filename)
 	c.Data(http.StatusOK, contentType, exportData)
+}
+
+// getContentTypeAndExtension returns the appropriate content type and file extension for the format.
+func (h *ExportHandler) getContentTypeAndExtension(format string) (string, string) {
+	switch format {
+	case "json":
+		return "application/json", "json"
+	case "csv":
+		return "text/csv", "csv"
+	default:
+		return "application/octet-stream", "bin"
+	}
 }

@@ -160,9 +160,9 @@ Yes — and *hell yes*. You want a **clean architecture with separation of conce
 
 Let me give you a full plan that outlines:
 
-1. 📦 **Project layering**  
-2. 🔄 **Where to apply the Strategy Pattern**  
-3. 🧪 **Where and how to use Dependency Injection**  
+1. 📦 **Project layering**
+2. 🔄 **Where to apply the Strategy Pattern**
+3. 🧪 **Where and how to use Dependency Injection**
 4. 🧱 **Interfaces and structure by example**
 
 ---

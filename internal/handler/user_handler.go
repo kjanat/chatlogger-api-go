@@ -3,9 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/kjanat/chatlogger-api-go/internal/domain"
-
 	"github.com/gin-gonic/gin"
+	"github.com/kjanat/chatlogger-api-go/internal/domain"
 )
 
 // UserHandler handles user-related requests.

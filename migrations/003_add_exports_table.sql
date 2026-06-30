@@ -13,10 +13,10 @@ CREATE TABLE IF NOT EXISTS exports (
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     completed_at TIMESTAMP,
-    
-    CONSTRAINT fk_exports_organization FOREIGN KEY (organization_id) 
+
+    CONSTRAINT fk_exports_organization FOREIGN KEY (organization_id)
         REFERENCES organizations(id) ON DELETE CASCADE,
-    CONSTRAINT fk_exports_user FOREIGN KEY (user_id) 
+    CONSTRAINT fk_exports_user FOREIGN KEY (user_id)
         REFERENCES users(id) ON DELETE CASCADE
 );
 

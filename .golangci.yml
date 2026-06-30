@@ -1,0 +1,83 @@
+version: "2"
+
+# Minimal golangci-lint configuration for compatibility
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - gosec
+    - importas
+    - makezero
+    - sloglint
+    - wrapcheck
+  settings:
+    gocyclo:
+      # Minimal code complexity to report.
+      # Default: 30 (but we recommend 10-20)
+      min-complexity: 30
+    godox:
+      # Report any comments starting with keywords, this is useful for TODO or FIXME comments that
+      # might be left in the code accidentally and should be resolved before merging.
+      # Default: ["TODO", "BUG", "FIXME"]
+      keywords:
+        - TODO
+        - BUG
+        - FIXME
+        - NOTE
+        - OPTIMIZE # marks code that should be optimized before merging
+        - HACK # marks hack-around that should be removed before merging
+
+formatters:
+  # Enable specific formatter.
+  # Default: [] (uses standard Go formatting)
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    - golines
+    - swaggo
+
+issues:
+  exclude-dirs:
+    - bin
+    - output
+    - test_output
+    - source
+    - .backup
+  exclude-rules:
+    # Disable wrapcheck for test files and mocks
+    - path: _test\.go
+      linters: [wrapcheck, errcheck, godot]
+    - path: test/
+      linters: [wrapcheck, errcheck, godot, gosec]
+    - path: internal/repository/benchmark_test\.go
+      linters: [errcheck]
+    # Disable wrapcheck for simple repository pass-through methods
+    - linters: [wrapcheck]
+      text: "error returned from interface method should be wrapped"
+    # Disable wrapcheck for mock test methods
+    - linters: [wrapcheck]
+      text: "error returned from external package is unwrapped.*Arguments.*Error"
+    # Disable wrapcheck for all mock files
+    - path: test/mocks/
+      linters: [wrapcheck]
+    # Disable gosec for test fixtures using weak random
+    - path: test/fixtures/
+      linters: [gosec]
+    # Disable gosec file inclusion warning for tests reading generated files
+    - linters: [gosec]
+      text: "G304"
+    # Disable gosec weak random warning for test fixtures
+    - linters: [gosec]
+      text: "G404"

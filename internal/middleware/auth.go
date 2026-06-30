@@ -9,20 +9,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-
 	"github.com/kjanat/chatlogger-api-go/internal/domain"
 	"github.com/kjanat/chatlogger-api-go/internal/service"
 )
 
-// Context keys for values stored in Gin context
+// Context keys for values stored in Gin context.
 const (
-	// OrganizationIDKey is the key used to store organization ID in the context
+	// OrganizationIDKey is the key used to store organization ID in the context.
 	OrganizationIDKey = "orgID"
-	// UserIDKey is the key used to store user ID in the context
+	// UserIDKey is the key used to store user ID in the context.
 	UserIDKey = "userID"
-	// RoleKey is the key used to store user role in the context
+	// RoleKey is the key used to store user role in the context.
 	RoleKey = "role"
-	// RequestedOrgIDKey is the key used to store requested organization ID in the context
+	// RequestedOrgIDKey is the key used to store requested organization ID in the context.
 	RequestedOrgIDKey = "requestedOrgID"
 )
 
@@ -273,15 +272,13 @@ func ValidateSlugAccess(orgService domain.OrganizationService) gin.HandlerFunc {
 
 				return
 			}
-		} else {
+		} else if userOrgID.(uint64) != org.ID {
 			// For API key auth, we already verified the key belongs to the org
 			// Just check that the key's org matches the requested org
-			if userOrgID.(uint64) != org.ID {
-				c.JSON(http.StatusForbidden, gin.H{"error": "this API key cannot access this organization"})
-				c.Abort()
+			c.JSON(http.StatusForbidden, gin.H{"error": "this API key cannot access this organization"})
+			c.Abort()
 
-				return
-			}
+			return
 		}
 
 		c.Next()

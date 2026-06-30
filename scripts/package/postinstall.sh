@@ -48,7 +48,7 @@ EOF
     # Secure the config file
     chown root:chatlogger /etc/chatlogger/config.yaml
     chmod 640 /etc/chatlogger/config.yaml
-    
+
     echo "Created default configuration in /etc/chatlogger/config.yaml"
     echo "IMPORTANT: Please update database credentials and JWT secret before starting the service!"
 fi

@@ -14,29 +14,29 @@ import (
 	"github.com/kjanat/chatlogger-api-go/internal/version"
 )
 
-// @title          ChatLogger API (Go)
-// @description    API for logging and managing chat sessions.
-// @termsOfService https://github.com/kjanat/chatlogger-api-go#terms-of-service
+//	@title			ChatLogger API (Go)
+//	@description	API for logging and managing chat sessions.
+//	@termsOfService	https://github.com/kjanat/chatlogger-api-go#terms-of-service
 
-// @contact.name   ChatLogger
-// @contact.url    https://github.com/kjanat/chatlogger-api-go/issues
-// @contact.email  chatlogger-api-go+swagger@kjanat.com
+//	@contact.name	ChatLogger
+//	@contact.url	https://github.com/kjanat/chatlogger-api-go/issues
+//	@contact.email	chatlogger-api-go+swagger@kjanat.com
 
-// @license.name   MIT License
-// @license.url    https://github.com/kjanat/chatlogger-api-go/blob/master/LICENSE
+//	@license.name	MIT License
+//	@license.url	https://github.com/kjanat/chatlogger-api-go/blob/master/LICENSE
 
-// @securityDefinitions.apikey ApiKeyAuth
-// @in             header
-// @name           x-organization-api-key
+//	@securityDefinitions.apikey	ApiKeyAuth
+//	@in							header
+//	@name						x-organization-api-key
 
-// @securityDefinitions.apikey BearerAuth
-// @in             header
-// @name           Authorization
-// @description    Type "Bearer" followed by a space and JWT token.
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Type "Bearer" followed by a space and JWT token.
 
-// @externalDocs.description  GitHub Wiki
-// @externalDocs.url          https://github.com/kjanat/chatlogger-api-go/wiki
-// @externalDocs.name         Wiki
+//	@externalDocs.description	GitHub Wiki
+//	@externalDocs.url			https://github.com/kjanat/chatlogger-api-go/wiki
+//	@externalDocs.name			Wiki
 
 func main() {
 	// Log version information at startup
@@ -95,7 +95,12 @@ func main() {
 	swaggerService := service.NewSwaggerService()
 
 	// Configure Swagger documentation with API information
-	swaggerService.SetSwaggerInfo(version.Version, cfg.ApiServer.Scheme, cfg.ApiServer.Host, cfg.ApiServer.Port)
+	swaggerService.SetSwaggerInfo(
+		version.Version,
+		cfg.ApiServer.Scheme,
+		cfg.ApiServer.Host,
+		cfg.ApiServer.Port,
+	)
 
 	// 6. Bundle services for dependency injection
 	services := &api.AppServices{
@@ -109,12 +114,12 @@ func main() {
 		Config: &api.AppConfig{
 			ExportDir: cfg.ExportDir,
 			APIServer: struct {
-				Host string
-				Port string
+				Host   string
+				Port   string
 				Scheme string
 			}{
-				Host: cfg.ApiServer.Host,
-				Port: cfg.ApiServer.Port,
+				Host:   cfg.ApiServer.Host,
+				Port:   cfg.ApiServer.Port,
 				Scheme: cfg.ApiServer.Scheme,
 			},
 		},
@@ -128,6 +133,7 @@ func main() {
 	log.Printf("Server listening on port %s", port)
 
 	if err := router.Run(":" + port); err != nil {
-		log.Fatalf("Failed to run server: %v", err)
+		log.Printf("Failed to run server: %v", err)
+		return
 	}
 }

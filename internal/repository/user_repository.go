@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/kjanat/chatlogger-api-go/internal/domain"
-
 	"gorm.io/gorm"
 )
 

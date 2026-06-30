@@ -44,17 +44,28 @@ func (s *OrganizationService) Create(org *domain.Organization) error {
 	org.UpdatedAt = time.Now()
 
 	// Create the organization
-	return s.orgRepo.Create(org)
+	if err := s.orgRepo.Create(org); err != nil {
+		return fmt.Errorf("failed to create organization: %w", err)
+	}
+	return nil
 }
 
 // GetByID gets an organization by ID.
 func (s *OrganizationService) GetByID(id uint64) (*domain.Organization, error) {
-	return s.orgRepo.FindByID(id)
+	org, err := s.orgRepo.FindByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find organization by ID: %w", err)
+	}
+	return org, nil
 }
 
 // GetBySlug gets an organization by slug.
 func (s *OrganizationService) GetBySlug(slug string) (*domain.Organization, error) {
-	return s.orgRepo.FindBySlug(slug)
+	org, err := s.orgRepo.FindBySlug(slug)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find organization by slug: %w", err)
+	}
+	return org, nil
 }
 
 // Update updates an organization.
@@ -85,17 +96,27 @@ func (s *OrganizationService) Update(org *domain.Organization) error {
 	org.UpdatedAt = time.Now()
 
 	// Update the organization
-	return s.orgRepo.Update(org)
+	if err := s.orgRepo.Update(org); err != nil {
+		return fmt.Errorf("failed to update organization: %w", err)
+	}
+	return nil
 }
 
 // Delete deletes an organization.
 func (s *OrganizationService) Delete(id uint64) error {
-	return s.orgRepo.Delete(id)
+	if err := s.orgRepo.Delete(id); err != nil {
+		return fmt.Errorf("failed to delete organization: %w", err)
+	}
+	return nil
 }
 
 // List lists organizations with pagination.
 func (s *OrganizationService) List(limit, offset int) ([]domain.Organization, error) {
-	return s.orgRepo.List(limit, offset)
+	orgs, err := s.orgRepo.List(limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list organizations: %w", err)
+	}
+	return orgs, nil
 }
 
 // Helper functions
@@ -109,11 +130,11 @@ func generateSlug(name string) string {
 	slug = strings.ReplaceAll(slug, " ", "-")
 
 	// Remove special characters
-	reg, _ := regexp.Compile("[^a-z0-9-]+")
+	reg := regexp.MustCompile("[^a-z0-9-]+")
 	slug = reg.ReplaceAllString(slug, "")
 
 	// Remove multiple dashes
-	reg, _ = regexp.Compile("-+")
+	reg = regexp.MustCompile("-+")
 	slug = reg.ReplaceAllString(slug, "-")
 
 	// Trim dashes from beginning and end

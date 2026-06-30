@@ -3,7 +3,7 @@
 INSERT INTO organizations
     (name, slug)
 VALUES
-    ('System Admin', 'system-admin'), 
+    ('System Admin', 'system-admin'),
     ('Not assigned to any org', 'unassigned');
 
 INSERT INTO users

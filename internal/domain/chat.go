@@ -1,7 +1,9 @@
 package domain
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -43,7 +45,10 @@ func (c *Chat) GetTags() ([]string, error) {
 		return []string{}, nil
 	}
 	err := json.Unmarshal([]byte(c.Tags), &tags)
-	return tags, err
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal tags: %w", err)
+	}
+	return tags, nil
 }
 
 // SetTags converts a slice of tags into a JSON string.
@@ -53,7 +58,7 @@ func (c *Chat) SetTags(tags []string) error {
 	}
 	tagsJSON, err := json.Marshal(tags)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal tags: %w", err)
 	}
 	c.Tags = string(tagsJSON)
 	return nil
@@ -66,7 +71,10 @@ func (c *Chat) GetMetadata() (*ChatMetadata, error) {
 		return &metadata, nil // Return empty struct if no metadata
 	}
 	err := json.Unmarshal([]byte(c.Metadata), &metadata)
-	return &metadata, err
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
+	}
+	return &metadata, nil
 }
 
 // SetMetadata converts the ChatMetadata struct into a JSON string.
@@ -77,7 +85,7 @@ func (c *Chat) SetMetadata(metadata *ChatMetadata) error {
 	}
 	metadataJSON, err := json.Marshal(metadata)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal metadata: %w", err)
 	}
 	c.Metadata = string(metadataJSON)
 	return nil
@@ -85,23 +93,40 @@ func (c *Chat) SetMetadata(metadata *ChatMetadata) error {
 
 // ChatRepository defines the interface for chat data operations.
 type ChatRepository interface {
-	Create(chat *Chat) error
-	FindByID(id uint64) (*Chat, error)
-	FindByOrganizationID(orgID uint64, limit, offset int) ([]Chat, error)
-	FindByUserID(userID uint64, limit, offset int) ([]Chat, error)
-	Update(chat *Chat) error
-	Delete(id uint64) error
-	CountByOrgIDAndDateRange(orgID uint64, start, end time.Time) (int64, error)
-	GetTagStats(orgID uint64) (map[string]int64, error)
+	Create(ctx context.Context, chat *Chat) error
+	FindByID(ctx context.Context, id uint64) (*Chat, error)
+	FindByOrganizationID(ctx context.Context, orgID uint64, limit, offset int) ([]Chat, error)
+	FindByUserID(ctx context.Context, userID uint64, limit, offset int) ([]Chat, error)
+	Update(ctx context.Context, chat *Chat) error
+	Delete(ctx context.Context, id uint64) error
+	CountByOrgIDAndDateRange(ctx context.Context, orgID uint64, start, end time.Time) (int64, error)
+	GetTagStats(ctx context.Context, orgID uint64) (map[string]int64, error)
+}
+
+// ChatStatsResponse represents statistics for chat data.
+type ChatStatsResponse struct {
+	TotalChats int64              `json:"total_chats"`
+	TagStats   map[string]int64   `json:"tag_stats"`
+	DateRange  ChatStatsDateRange `json:"date_range"`
+}
+
+// ChatStatsDateRange represents the date range for chat statistics.
+type ChatStatsDateRange struct {
+	Start string `json:"start"`
+	End   string `json:"end"`
 }
 
 // ChatService defines the interface for chat business logic.
 type ChatService interface {
-	CreateChat(chat *Chat) error
-	GetByID(id uint64) (*Chat, error)
-	GetByOrganizationID(orgID uint64, limit, offset int) ([]Chat, error)
-	GetByUserID(userID uint64, limit, offset int) ([]Chat, error)
-	UpdateChat(chat *Chat) error
-	DeleteChat(id uint64) error
-	GetChatStats(orgID uint64, start, end time.Time) (map[string]any, error)
+	CreateChat(ctx context.Context, chat *Chat) error
+	GetByID(ctx context.Context, id uint64) (*Chat, error)
+	GetByOrganizationID(ctx context.Context, orgID uint64, limit, offset int) ([]Chat, error)
+	GetByUserID(ctx context.Context, userID uint64, limit, offset int) ([]Chat, error)
+	UpdateChat(ctx context.Context, chat *Chat) error
+	DeleteChat(ctx context.Context, id uint64) error
+	GetChatStats(
+		ctx context.Context,
+		orgID uint64,
+		start, end time.Time,
+	) (*ChatStatsResponse, error)
 }

@@ -29,8 +29,8 @@ type Config struct {
 	// Port is the port for the API server
 	// Scheme is the scheme (http or https) for the API server
 	ApiServer struct {
-		Host string
-		Port string
+		Host   string
+		Port   string
 		Scheme string
 	}
 }
@@ -52,12 +52,12 @@ func LoadConfig() (*Config, error) {
 		RedisAddr:   os.Getenv("REDIS_ADDR"),
 		ExportDir:   os.Getenv("EXPORT_DIR"),
 		ApiServer: struct {
-			Host string
-			Port string
+			Host   string
+			Port   string
 			Scheme string
 		}{
-			Host: os.Getenv("API_ENDPOINT_HOST"),
-			Port: os.Getenv("API_ENDPOINT_PORT"),
+			Host:   os.Getenv("API_ENDPOINT_HOST"),
+			Port:   os.Getenv("API_ENDPOINT_PORT"),
 			Scheme: os.Getenv("API_ENDPOINT_SCHEME"),
 		},
 		// Load other config...
@@ -116,7 +116,7 @@ func LoadConfig() (*Config, error) {
 	}
 
 	// Create export directory if it doesn't exist
-	if err := os.MkdirAll(cfg.ExportDir, 0755); err != nil {
+	if err := os.MkdirAll(cfg.ExportDir, 0o750); err != nil {
 		log.Printf("Warning: Failed to create export directory %s: %v", cfg.ExportDir, err)
 	}
 

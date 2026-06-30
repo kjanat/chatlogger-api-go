@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/kjanat/chatlogger-api-go/internal/domain"
-
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -73,7 +72,7 @@ func runMigrations(db *gorm.DB) error {
 	log.Println("Running database migrations...")
 
 	// Begin a transaction to group all migration operations
-	return db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		// Auto migrate all models in a single transaction
 		if err := tx.AutoMigrate(
 			&domain.Organization{},
@@ -89,14 +88,21 @@ func runMigrations(db *gorm.DB) error {
 		log.Println("Database migrations completed successfully")
 		return nil
 	})
+	if err != nil {
+		return fmt.Errorf("failed to run database migration transaction: %w", err)
+	}
+	return nil
 }
 
 // Close closes the database connection.
 func (db *Database) Close() error {
 	sqlDB, err := db.DB.DB()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get SQL DB for closing: %w", err)
 	}
 
-	return sqlDB.Close()
+	if err := sqlDB.Close(); err != nil {
+		return fmt.Errorf("failed to close database connection: %w", err)
+	}
+	return nil
 }

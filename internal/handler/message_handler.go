@@ -5,9 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kjanat/chatlogger-api-go/internal/domain"
-
 	"github.com/gin-gonic/gin"
+	"github.com/kjanat/chatlogger-api-go/internal/domain"
 )
 
 // MessageHandler handles message-related requests.
@@ -76,7 +75,7 @@ func (h *MessageHandler) CreateMessage(c *gin.Context) {
 	}
 
 	// Get the chat to validate ownership
-	chat, err := h.chatService.GetByID(id)
+	chat, err := h.chatService.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get chat: " + err.Error()})
 
@@ -118,7 +117,10 @@ func (h *MessageHandler) CreateMessage(c *gin.Context) {
 
 	// Set metadata
 	if err := message.SetMetadata(req.Metadata); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process message metadata: " + err.Error()})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to process message metadata: " + err.Error()},
+		)
 
 		return
 	}
@@ -131,8 +133,11 @@ func (h *MessageHandler) CreateMessage(c *gin.Context) {
 	}
 
 	// Create the message
-	if err := h.messageService.CreateMessage(message); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create message: " + err.Error()})
+	if err := h.messageService.CreateMessage(c.Request.Context(), message); err != nil {
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to create message: " + err.Error()},
+		)
 
 		return
 	}
@@ -181,7 +186,7 @@ func (h *MessageHandler) GetMessages(c *gin.Context) {
 	}
 
 	// Get the chat to validate ownership
-	chat, err := h.chatService.GetByID(id)
+	chat, err := h.chatService.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get chat: " + err.Error()})
 
@@ -214,9 +219,12 @@ func (h *MessageHandler) GetMessages(c *gin.Context) {
 	}
 
 	// Get messages for the chat
-	messages, err := h.messageService.GetByChatID(chat.ID)
+	messages, err := h.messageService.GetByChatID(c.Request.Context(), chat.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get messages: " + err.Error()})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to get messages: " + err.Error()},
+		)
 
 		return
 	}
@@ -262,6 +270,13 @@ func (h *MessageHandler) GetMessageStats(c *gin.Context) {
 		return
 	}
 
+	// Type assert organization ID
+	orgIDValue, ok := orgID.(uint64)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Organization ID type in context"})
+		return
+	}
+
 	// Parse date range parameters
 	startStr := c.DefaultQuery("start", "")
 	endStr := c.DefaultQuery("end", "")
@@ -295,7 +310,7 @@ func (h *MessageHandler) GetMessageStats(c *gin.Context) {
 	}
 
 	// Get message statistics
-	stats, err := h.messageService.GetMessageStats(uint64(orgID.(uint64)), start, end)
+	stats, err := h.messageService.GetMessageStats(c.Request.Context(), orgIDValue, start, end)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get message statistics"})
 
